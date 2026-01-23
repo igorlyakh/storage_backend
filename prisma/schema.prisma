@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STORE
+  OPERATOR
+  ADMIN
+}
+
+enum OrderStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  role      Role
+  storeId   Int?
+  store     Store?   @relation(fields: [storeId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  users  User[]
+  orders Order[]
+}
+
+model Product {
+  id            Int    @id @default(autoincrement())
+  name          String
+  limitPerOrder Int
+  stock         Int
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id      Int   @id @default(autoincrement())
+  storeId Int
+  store   Store @relation(fields: [storeId], references: [id])
+
+  status    OrderStatus @default(NEW)
+  createdAt DateTime    @default(now())
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  orderId   Int
+  productId Int
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  quantity  Int
+  collected Boolean @default(false)
+
+  @@id([orderId, productId])
+}
