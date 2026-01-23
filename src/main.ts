@@ -10,6 +10,8 @@ async function bootstrap() {
     origin: 'all',
   });
 
+  app.setGlobalPrefix('api');
+
   await app.listen(PORT, () => console.log('Сервер запущен.'));
 }
 bootstrap();
