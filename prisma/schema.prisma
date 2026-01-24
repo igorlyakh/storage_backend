@@ -20,11 +20,12 @@ enum OrderStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  role      Role
-  storeId   Int?
-  store     Store?   @relation(fields: [storeId], references: [id])
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  supabaseId String   @unique
+  role       Role     @default(STORE)
+  storeId    Int?
+  store      Store?   @relation(fields: [storeId], references: [id])
+  createdAt  DateTime @default(now())
 }
 
 model Store {
