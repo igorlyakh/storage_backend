@@ -12,6 +12,6 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  await app.listen(PORT, () => console.log('Сервер запущен.'));
+  await app.listen(PORT, () => console.log(`Сервер запущен. Port = ${PORT}`));
 }
 bootstrap();
