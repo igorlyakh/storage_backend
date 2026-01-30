@@ -39,7 +39,7 @@ model User {
   password    String
   role        Role
   isActive    Boolean @default(true)
-  accessToken String
+  accessToken String?
 
   // магазин
   storeId String?
