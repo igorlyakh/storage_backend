@@ -3,9 +3,11 @@ import {
   ConflictException,
   Controller,
   Post,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 
@@ -13,6 +15,7 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('/')
   @UsePipes(
     new ValidationPipe({
