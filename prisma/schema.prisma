@@ -42,7 +42,7 @@ model User {
   accessToken String?
 
   // магазин
-  storeId String?
+  storeId Int?
   store   Store?  @relation(fields: [storeId], references: [id])
 
   // администратор
@@ -56,7 +56,7 @@ model User {
 }
 
 model Store {
-  id   String @id @default(uuid())
+  id   Int @id @default(autoincrement())
   name String @unique
 
   users  User[]
@@ -96,7 +96,7 @@ model WarehouseStock {
 
 model Order {
   id      String @id @default(uuid())
-  storeId String
+  storeId Int
   store   Store  @relation(fields: [storeId], references: [id])
 
   status OrderStatus @default(NEW)
