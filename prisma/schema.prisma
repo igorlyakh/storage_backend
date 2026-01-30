@@ -8,63 +8,139 @@ datasource db {
 }
 
 enum Role {
-  STORE
-  OPERATOR
-  ADMIN
+  STORE // магазин
+  WAREHOUSE // марлог
+  ADMIN // администратор
+}
+
+enum AdminScope {
+  PACKAGES // пакеты
+  LABELS // наклейки
+  PACKAGING // Вещи Цура
 }
 
 enum OrderStatus {
+  NEW // создан магазином
+  IN_PROGRESS // в работе на марлоге
+  SENT // отправлен
+  COMPLETED // закрыт
+}
+
+enum WarehouseRequestStatus {
   NEW
-  IN_PROGRESS
-  DONE
+  APPROVED
+  SENT
+  COMPLETED
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  supabaseId String   @unique
-  role       Role     @default(STORE)
-  storeId    Int?
-  store      Store?   @relation(fields: [storeId], references: [id])
-  createdAt  DateTime @default(now())
+  id          String  @id @default(uuid())
+  userName    String  @unique
+  password    String
+  role        Role
+  isActive    Boolean @default(true)
+  accessToken String
+
+  // магазин
+  storeId String?
+  store   Store?  @relation(fields: [storeId], references: [id])
+
+  // администратор
+  adminScopes AdminScope[]
+
+  // склад
+  warehouseRequests WarehouseRequest[] @relation("WarehouseCreator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Store {
-  id   Int    @id @default(autoincrement())
+  id   String @id @default(uuid())
   name String @unique
 
   users  User[]
   orders Order[]
+
+  createdAt DateTime @default(now())
 }
+
+// PRODUCTS & STOCK
 
 model Product {
-  id            Int    @id @default(autoincrement())
+  id            String     @id @default(uuid())
   name          String
-  limitPerOrder Int
-  stock         Int
+  category      AdminScope
+  isEnabled     Boolean    @default(true)
+  limitPerOrder Int? // null = без ограничения
 
-  orderItems OrderItem[]
+  stock        WarehouseStock?
+  orderItems   OrderItem[]
+  requestItems WarehouseRequestItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Order {
-  id      Int   @id @default(autoincrement())
-  storeId Int
-  store   Store @relation(fields: [storeId], references: [id])
+model WarehouseStock {
+  id        String @id @default(uuid())
+  productId String @unique
+  quantity  Int // текущий остаток
 
-  status    OrderStatus @default(NEW)
-  createdAt DateTime    @default(now())
+  product Product @relation(fields: [productId], references: [id])
+
+  updatedAt DateTime @updatedAt
+}
+
+// STORE -> WAREHOUSE ORDERS
+
+model Order {
+  id      String @id @default(uuid())
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  status OrderStatus @default(NEW)
 
   items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model OrderItem {
-  orderId   Int
-  productId Int
+  id        String @id @default(uuid())
+  orderId   String
+  productId String
+
+  requestedQty Int // запрос магазина
+  shippedQty   Int? // фактически отправлено складом
 
   order   Order   @relation(fields: [orderId], references: [id])
   product Product @relation(fields: [productId], references: [id])
+}
 
+// WAREHOUSE -> ADMIN REQUESTS (REPLENISHMENT)
+
+model WarehouseRequest {
+  id       String                 @id @default(uuid())
+  category AdminScope
+  status   WarehouseRequestStatus @default(NEW)
+
+  items WarehouseRequestItem[]
+
+  createdBy String
+  creator   User   @relation("WarehouseCreator", fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WarehouseRequestItem {
+  id        String @id @default(uuid())
+  requestId String
+  productId String
   quantity  Int
-  collected Boolean @default(false)
 
-  @@id([orderId, productId])
+  request WarehouseRequest @relation(fields: [requestId], references: [id])
+  product Product          @relation(fields: [productId], references: [id])
 }
