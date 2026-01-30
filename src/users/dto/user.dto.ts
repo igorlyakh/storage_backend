@@ -8,7 +8,7 @@ export class UserDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(6, { message: 'Password is required!' })
+  @MinLength(6, { message: 'Minimum password length is 6 characters!' })
   password: string;
 
   @IsEnum(Role)
