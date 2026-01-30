@@ -35,7 +35,7 @@ enum WarehouseRequestStatus {
 
 model User {
   id          String  @id @default(uuid())
-  userName    String  @unique
+  username    String  @unique
   password    String
   role        Role
   isActive    Boolean @default(true)
