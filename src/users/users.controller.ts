@@ -2,6 +2,8 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
+  HttpCode,
   Post,
   UseGuards,
   UsePipes,
@@ -15,11 +17,11 @@ import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(Role.ADMIN)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Roles(Role.ADMIN)
   @Post('/')
   @UsePipes(
     new ValidationPipe({
@@ -34,5 +36,12 @@ export class UsersController {
     }
     const user = await this.usersService.createUser(createUser);
     return user;
+  }
+
+  @HttpCode(200)
+  @Delete('')
+  async deleteUser(@Body() id: string) {
+    const result = await this.usersService.deleteUserById(id);
+    return result;
   }
 }

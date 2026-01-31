@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
@@ -38,5 +38,13 @@ export class UsersService {
   async hashPassword(password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
     return hashedPassword;
+  }
+
+  async deleteUserById(id: string) {
+    const candidate = await this.prisma.user.findUnique({ where: { id } });
+    if (!candidate) {
+      throw new NotFoundException('User is not found!');
+    }
+    return await this.prisma.user.delete({ where: { id } });
   }
 }
