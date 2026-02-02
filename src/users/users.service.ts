@@ -47,4 +47,8 @@ export class UsersService {
     }
     return await this.prisma.user.delete({ where: { id } });
   }
+
+  async getAllUsers() {
+    return await this.prisma.user.findMany();
+  }
 }

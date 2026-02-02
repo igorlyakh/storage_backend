@@ -3,6 +3,7 @@ import {
   ConflictException,
   Controller,
   Delete,
+  Get,
   HttpCode,
   Post,
   UseGuards,
@@ -43,5 +44,10 @@ export class UsersController {
   async deleteUser(@Body() id: string) {
     const result = await this.usersService.deleteUserById(id);
     return result;
+  }
+
+  @Get()
+  async getAllUsers() {
+    return await this.usersService.getAllUsers();
   }
 }
