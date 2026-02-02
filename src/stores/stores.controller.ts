@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Delete,
+  HttpCode,
   Post,
   UseGuards,
   UsePipes,
@@ -27,5 +29,11 @@ export class StoresController {
   )
   async createStore(@Body() dto: CreateStoreDto) {
     return await this.storesService.createStore(dto);
+  }
+
+  @HttpCode(200)
+  @Delete('')
+  async deleteStore(@Body() name: string) {
+    return await this.storesService.deleteStoreByName(name);
   }
 }
