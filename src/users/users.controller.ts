@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Patch,
   Post,
   UseGuards,
   UsePipes,
@@ -14,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
+import { UpdateRoleDto } from './dto/updateRole.dto';
 import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 
@@ -46,8 +48,19 @@ export class UsersController {
     return result;
   }
 
-  @Get()
+  @Get('')
   async getAllUsers() {
     return await this.usersService.getAllUsers();
+  }
+
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
+  @Patch('')
+  async updateUserRole(@Body() dto: UpdateRoleDto) {
+    return await this.usersService.updateRoleByName(dto);
   }
 }
