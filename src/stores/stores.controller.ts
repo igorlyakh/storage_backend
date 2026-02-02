@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   Post,
   UseGuards,
@@ -35,5 +36,10 @@ export class StoresController {
   @Delete('')
   async deleteStore(@Body() name: string) {
     return await this.storesService.deleteStoreByName(name);
+  }
+
+  @Get('')
+  async getAllStore() {
+    return await this.storesService.getAllStores();
   }
 }

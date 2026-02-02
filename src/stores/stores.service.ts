@@ -27,4 +27,8 @@ export class StoresService {
     }
     return await this.prisma.store.delete({ where: { name: store.name } });
   }
+
+  async getAllStores() {
+    return await this.prisma.store.findMany();
+  }
 }
