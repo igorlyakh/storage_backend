@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 import { AdminScope } from 'generated/prisma/enums';
 
 export class CreateProductDto {
@@ -11,6 +11,12 @@ export class CreateProductDto {
   category: AdminScope;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   limitPerOrder?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  initialQuantity?: number;
 }

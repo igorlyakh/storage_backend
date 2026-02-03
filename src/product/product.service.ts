@@ -12,12 +12,13 @@ export class ProductService {
     if (candidate) {
       throw new ConflictException('Product already exists!');
     }
+    const { initialQuantity, ...productData } = dto;
     const product = await this.prisma.product.create({
       data: {
-        ...dto,
+        ...productData,
         stock: {
           create: {
-            quantity: 0,
+            quantity: initialQuantity ?? 0,
           },
         },
       },
