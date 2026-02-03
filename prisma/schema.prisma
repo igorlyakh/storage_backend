@@ -43,7 +43,7 @@ model User {
 
   // магазин
   storeId Int?
-  store   Store?  @relation(fields: [storeId], references: [id])
+  store   Store?  @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   // администратор
   adminScopes AdminScope[]
@@ -97,7 +97,7 @@ model WarehouseStock {
 model Order {
   id      String @id @default(uuid())
   storeId Int
-  store   Store  @relation(fields: [storeId], references: [id])
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   status OrderStatus @default(NEW)
 
@@ -115,7 +115,7 @@ model OrderItem {
   requestedQty Int // запрос магазина
   shippedQty   Int? // фактически отправлено складом
 
-  order   Order   @relation(fields: [orderId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
 }
 
