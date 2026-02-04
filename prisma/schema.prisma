@@ -14,7 +14,7 @@ enum Role {
 }
 
 enum AdminScope {
-  PACKAGES // пакеты
+  BAGS // пакеты
   LABELS // наклейки
   PACKAGING // Вещи Цура
 }
