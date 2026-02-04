@@ -13,12 +13,13 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
+import { RolesGuard } from 'src/guards/role.guard';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { DeleteProductDto } from './dto/deleteProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { ProductService } from './product.service';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles(Role.ADMIN)
 @Controller('product')
 export class ProductController {

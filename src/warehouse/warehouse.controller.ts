@@ -3,10 +3,11 @@ import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
 import { CategoryAccessGuard } from 'src/guards/access.guard';
+import { RolesGuard } from 'src/guards/role.guard';
 import { OperationDto } from './dto/operation.dto';
 import { WarehouseService } from './warehouse.service';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles(Role.ADMIN)
 @Controller('warehouse')
 export class WarehouseController {

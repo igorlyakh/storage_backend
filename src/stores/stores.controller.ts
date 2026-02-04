@@ -12,10 +12,11 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
+import { RolesGuard } from 'src/guards/role.guard';
 import { CreateStoreDto } from './dto/createStore.dto';
 import { StoresService } from './stores.service';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles(Role.ADMIN)
 @Controller('stores')
 export class StoresController {
