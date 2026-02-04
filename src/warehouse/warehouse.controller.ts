@@ -1,8 +1,7 @@
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
-import { CategoryAccessGuard } from 'src/guards/access.guard';
 import { RolesGuard } from 'src/guards/role.guard';
 import { OperationDto } from './dto/operation.dto';
 import { WarehouseService } from './warehouse.service';
@@ -13,15 +12,13 @@ import { WarehouseService } from './warehouse.service';
 export class WarehouseController {
   constructor(private readonly warehouseService: WarehouseService) {}
 
-  @UseGuards(CategoryAccessGuard)
-  @Post('increase')
-  async increaseProduct(dto: OperationDto) {
+  @Patch('increase')
+  async increaseProduct(@Body() dto: OperationDto) {
     return await this.warehouseService.increaseItem(dto);
   }
 
-  @UseGuards(CategoryAccessGuard)
-  @Post('decrease')
-  async decreaseProduct(dto: OperationDto) {
+  @Patch('decrease')
+  async decreaseProduct(@Body() dto: OperationDto) {
     return await this.warehouseService.decreaseItem(dto);
   }
 }
