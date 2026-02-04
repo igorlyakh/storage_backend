@@ -1,6 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { User } from 'generated/prisma/client';
 import { Role } from 'generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
@@ -9,7 +10,7 @@ import { LoginDto } from './dto/login.dto';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prismaService: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly jwt: JwtService,
   ) {}
@@ -18,7 +19,7 @@ export class AuthService {
     const user = await this.validateUser(dto.username, dto.password);
     if (user) {
       const accessToken = await this.generateToken(user.id, user.username, user.role);
-      await this.prismaService.user.update({
+      await this.prisma.user.update({
         where: { id: user.id },
         data: { accessToken },
       });
@@ -45,5 +46,12 @@ export class AuthService {
     const payload = { id, username, role };
     const accessToken = this.jwt.sign(payload);
     return accessToken;
+  }
+
+  async logout(user: User) {
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { accessToken: null },
+    });
   }
 }
