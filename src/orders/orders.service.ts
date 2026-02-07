@@ -34,10 +34,21 @@ export class OrdersService {
   }
 
   async getAllOrdersByStoreId(storeId: number) {
-    return await this.prisma.order.findMany({ where: { storeId } });
+    return await this.prisma.order.findMany({
+      where: { storeId },
+      include: { items: true },
+    });
   }
 
   async getAllOrders() {
-    return await this.prisma.order.findMany();
+    return await this.prisma.order.findMany({ include: { items: true } });
+  }
+
+  async startProcessing(orderId: string) {
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'IN_PROGRESS' },
+      include: { items: true },
+    });
   }
 }

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   UseGuards,
   UsePipes,
@@ -42,5 +43,11 @@ export class OrdersController {
   @Get('')
   async getOrdersByStoreId(@CurrentUser('storeId') storeId: number) {
     return await this.ordersService.getAllOrdersByStoreId(storeId);
+  }
+
+  @Roles(Role.WAREHOUSE, Role.ADMIN)
+  @Patch('/processing')
+  async startProcessing(@Body('orderId') orderId: string) {
+    return await this.ordersService.startProcessing(orderId);
   }
 }
