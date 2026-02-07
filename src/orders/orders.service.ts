@@ -32,4 +32,12 @@ export class OrdersService {
       }
     }
   }
+
+  async getAllOrdersByStoreId(storeId: number) {
+    return await this.prisma.order.findMany({ where: { storeId } });
+  }
+
+  async getAllOrders() {
+    return await this.prisma.order.findMany();
+  }
 }
