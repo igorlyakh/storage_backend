@@ -8,7 +8,7 @@ export class WarehouseService {
 
   async increaseItem(dto: OperationDto) {
     const candidate = await this.prisma.warehouseStock.findUnique({
-      where: { productId: dto.productId },
+      where: { productId: dto.id },
     });
 
     if (!candidate) {
@@ -16,7 +16,7 @@ export class WarehouseService {
     }
 
     const result = await this.prisma.warehouseStock.update({
-      where: { productId: dto.productId },
+      where: { productId: dto.id },
       data: {
         quantity: {
           increment: dto.quantity,
@@ -29,7 +29,7 @@ export class WarehouseService {
 
   async decreaseItem(dto: OperationDto) {
     const candidate = await this.prisma.warehouseStock.findUnique({
-      where: { productId: dto.productId },
+      where: { productId: dto.id },
     });
 
     if (!candidate) {
@@ -41,7 +41,7 @@ export class WarehouseService {
     }
 
     const result = await this.prisma.warehouseStock.update({
-      where: { productId: dto.productId },
+      where: { productId: dto.id },
       data: {
         quantity: {
           decrement: dto.quantity,

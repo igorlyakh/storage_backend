@@ -1,4 +1,4 @@
 export class OperationDto {
-  productId: string;
+  id: string;
   quantity: number;
 }
