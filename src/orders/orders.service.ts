@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/createOrder.dto';
+import { SendOrderDto } from './dto/sendOrder.dto';
 
 @Injectable()
 export class OrdersService {
@@ -49,6 +50,48 @@ export class OrdersService {
       where: { id: orderId },
       data: { status: 'IN_PROGRESS' },
       include: { items: true },
+    });
+  }
+
+  async sendOrder(dto: SendOrderDto) {
+    return await this.prisma.$transaction(async tx => {
+      const order = await tx.order.findUnique({
+        where: { id: dto.orderId },
+        include: { items: true },
+      });
+      if (!order) throw new NotFoundException('Order not found!');
+      if (order.status === 'COMPLETED')
+        throw new BadRequestException('Order is already completed!');
+
+      const sendedMap = new Map<string, number>();
+      if (dto.items) {
+        dto.items.forEach(item => sendedMap.set(item.productId, item.quantity));
+      }
+
+      for (const item of order.items) {
+        const actualQty = sendedMap.has(item.productId)
+          ? sendedMap.get(item.productId)
+          : item.requestedQty;
+
+        await tx.warehouseStock.update({
+          where: { productId: item.productId },
+          data: { quantity: { decrement: actualQty } },
+        });
+
+        await tx.orderItem.update({
+          where: {
+            id: item.id,
+          },
+          data: {
+            shippedQty: actualQty,
+          },
+        });
+      }
+
+      return await tx.order.update({
+        where: { id: dto.orderId },
+        data: { status: 'COMPLETED' },
+      });
     });
   }
 }

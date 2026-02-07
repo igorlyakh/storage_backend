@@ -14,6 +14,7 @@ import { Roles } from 'src/decorators/role.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { CreateOrderDto } from './dto/createOrder.dto';
+import { SendOrderDto } from './dto/sendOrder.dto';
 import { OrdersService } from './orders.service';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -49,5 +50,17 @@ export class OrdersController {
   @Patch('/processing')
   async startProcessing(@Body('orderId') orderId: string) {
     return await this.ordersService.startProcessing(orderId);
+  }
+
+  @Roles(Role.WAREHOUSE, Role.ADMIN)
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
+  @Patch('/send')
+  async sendOrder(@Body() dto: SendOrderDto) {
+    return this.ordersService.sendOrder(dto);
   }
 }
