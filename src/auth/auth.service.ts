@@ -26,7 +26,7 @@ export class AuthService {
       return {
         username: user.username,
         role: user.role,
-        AdminScope: user.adminScopes,
+        adminScopes: user.adminScopes,
         accessToken,
       };
     }
