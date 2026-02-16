@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   UseGuards,
@@ -61,6 +62,12 @@ export class OrdersController {
   )
   @Patch('/send')
   async sendOrder(@Body() dto: SendOrderDto) {
-    return this.ordersService.sendOrder(dto);
+    return await this.ordersService.sendOrder(dto);
+  }
+
+  @Get('/:id')
+  async getOrderById(@Param('id') id: string) {
+    const order = await this.ordersService.getOrderById(id);
+    return order;
   }
 }

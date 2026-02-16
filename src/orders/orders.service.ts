@@ -94,4 +94,15 @@ export class OrdersService {
       });
     });
   }
+
+  async getOrderById(id: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!order) {
+      throw new NotFoundException('Order not found!');
+    }
+    return order;
+  }
 }
