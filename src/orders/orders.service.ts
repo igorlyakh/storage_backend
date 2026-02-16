@@ -37,7 +37,7 @@ export class OrdersService {
   async getAllOrdersByStoreId(storeId: number) {
     return await this.prisma.order.findMany({
       where: { storeId },
-      include: { items: true },
+      include: { items: { include: { product: true } }, store: true },
     });
   }
 
