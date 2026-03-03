@@ -48,6 +48,10 @@ export class ProductService {
       throw new NotFoundException('Product not found!');
     }
 
-    return await this.prisma.product.update({ where: { id }, data: { ...dto } });
+    return await this.prisma.product.update({
+      where: { id },
+      data: { ...dto },
+      include: { stock: true },
+    });
   }
 }
