@@ -11,6 +11,7 @@ export class UsersService {
   async findByUsername(username: string) {
     const user = await this.prisma.user.findUnique({
       where: { username },
+      include: { store: true },
     });
     return user;
   }
@@ -18,6 +19,7 @@ export class UsersService {
   async findUserById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
+      include: { store: true },
     });
     return user;
   }
@@ -50,7 +52,7 @@ export class UsersService {
   }
 
   async getAllUsers() {
-    return await this.prisma.user.findMany();
+    return await this.prisma.user.findMany({ include: { store: true } });
   }
 
   async updateRoleByName(dto: UpdateRoleDto) {
