@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -37,8 +38,9 @@ export class OrdersController {
 
   @Roles(Role.ADMIN, Role.WAREHOUSE)
   @Get('/all')
-  async getAll() {
-    return await this.ordersService.getAllOrders();
+  async getAll(@Query('page') page?: string) {
+    const pageNumber = Math.max(1, Number(page) || 1);
+    return await this.ordersService.getAllOrders(pageNumber);
   }
 
   @Roles(Role.STORE)
