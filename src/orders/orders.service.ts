@@ -34,11 +34,39 @@ export class OrdersService {
     }
   }
 
-  async getAllOrdersByStoreId(storeId: number) {
-    return await this.prisma.order.findMany({
-      where: { storeId },
-      include: { items: { include: { product: true } }, store: true },
-    });
+  async getAllOrdersByStoreId(storeId: number, page: number = 1) {
+    const LIMIT = 9;
+    const skip = (page - 1) * LIMIT;
+    const [orders, totalCount] = await Promise.all([
+      this.prisma.order.findMany({
+        where: {
+          storeId,
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+          store: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: skip,
+        take: LIMIT,
+      }),
+      this.prisma.order.count(),
+    ]);
+    return {
+      data: orders,
+      meta: {
+        total: totalCount,
+        page,
+        limit: LIMIT,
+        lastPage: Math.ceil(totalCount / LIMIT),
+      },
+    };
   }
 
   async getAllOrders(page: number = 1) {
