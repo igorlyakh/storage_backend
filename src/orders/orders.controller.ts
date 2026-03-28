@@ -45,8 +45,12 @@ export class OrdersController {
 
   @Roles(Role.STORE)
   @Get('')
-  async getOrdersByStoreId(@CurrentUser('storeId') storeId: number) {
-    return await this.ordersService.getAllOrdersByStoreId(storeId);
+  async getOrdersByStoreId(
+    @CurrentUser('storeId') storeId: number,
+    @Query('page') page?: string,
+  ) {
+    const pageNumber = Math.max(1, Number(page) || 1);
+    return await this.ordersService.getAllOrdersByStoreId(storeId, pageNumber);
   }
 
   @Roles(Role.WAREHOUSE, Role.ADMIN)
