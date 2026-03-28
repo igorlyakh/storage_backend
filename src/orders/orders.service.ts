@@ -56,7 +56,7 @@ export class OrdersService {
         skip: skip,
         take: LIMIT,
       }),
-      this.prisma.order.count(),
+      this.prisma.order.count({ where: { storeId } }),
     ]);
     return {
       data: orders,
@@ -69,12 +69,33 @@ export class OrdersService {
     };
   }
 
-  async getAllOrders(page: number = 1) {
+  async getAllOrders(
+    page: number = 1,
+    filters?: { storeId?: string; status?: string; dateFrom?: Date; dateTo?: Date },
+  ) {
     const LIMIT = 9;
     const skip = (page - 1) * LIMIT;
 
+    const statusFilter = filters?.status || 'NEW';
+
+    const where: any = {
+      status: statusFilter,
+    };
+
+    if (filters?.storeId) {
+      where.storeId = filters.storeId;
+    }
+
+    if (filters?.dateFrom || filters?.dateTo) {
+      where.createdAt = {
+        ...(filters.dateFrom && { gte: filters.dateFrom }),
+        ...(filters.dateTo && { lte: filters.dateTo }),
+      };
+    }
+
     const [orders, totalCount] = await Promise.all([
       this.prisma.order.findMany({
+        where,
         include: {
           items: { include: { product: true } },
           store: true,
@@ -85,7 +106,7 @@ export class OrdersService {
         skip: skip,
         take: LIMIT,
       }),
-      this.prisma.order.count(),
+      this.prisma.order.count({ where }),
     ]);
 
     return {

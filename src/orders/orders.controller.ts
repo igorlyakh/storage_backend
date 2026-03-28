@@ -38,9 +38,21 @@ export class OrdersController {
 
   @Roles(Role.ADMIN, Role.WAREHOUSE)
   @Get('/all')
-  async getAll(@Query('page') page?: string) {
+  async getAll(
+    @Query('page') page?: string,
+    @Query('storeId') storeId?: string,
+    @Query('status') status?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     const pageNumber = Math.max(1, Number(page) || 1);
-    return await this.ordersService.getAllOrders(pageNumber);
+
+    return await this.ordersService.getAllOrders(pageNumber, {
+      storeId,
+      status,
+      dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+      dateTo: dateTo ? new Date(dateTo) : undefined,
+    });
   }
 
   @Roles(Role.STORE)
