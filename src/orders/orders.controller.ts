@@ -40,18 +40,16 @@ export class OrdersController {
   @Get('/all')
   async getAll(
     @Query('page') page?: string,
-    @Query('storeId') storeId?: string,
-    @Query('status') status?: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
+    @Query('storeIds') storeIds?: string,
+    @Query('statuses') statuses?: string,
+    @Query('date') date?: string,
   ) {
     const pageNumber = Math.max(1, Number(page) || 1);
 
     return await this.ordersService.getAllOrders(pageNumber, {
-      storeId,
-      status,
-      dateFrom: dateFrom ? new Date(dateFrom) : undefined,
-      dateTo: dateTo ? new Date(dateTo) : undefined,
+      storeIds: storeIds ? storeIds.split(',').map(id => Number(id)) : undefined,
+      statuses: statuses ? statuses.split(',') : undefined,
+      date: date,
     });
   }
 

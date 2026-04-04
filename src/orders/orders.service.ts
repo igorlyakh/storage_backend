@@ -71,25 +71,33 @@ export class OrdersService {
 
   async getAllOrders(
     page: number = 1,
-    filters?: { storeId?: string; status?: string; dateFrom?: Date; dateTo?: Date },
+    filters?: { storeIds?: number[]; statuses?: string[]; date?: string },
   ) {
     const LIMIT = 9;
     const skip = (page - 1) * LIMIT;
 
-    const statusFilter = filters?.status || 'NEW';
+    const statusesFilter = filters?.statuses?.length
+      ? filters.statuses
+      : ['NEW', 'IN_PROGRESS'];
 
     const where: any = {
-      status: statusFilter,
+      status: { in: statusesFilter },
     };
 
-    if (filters?.storeId) {
-      where.storeId = filters.storeId;
+    if (filters?.storeIds?.length) {
+      where.storeId = { in: filters.storeIds };
     }
 
-    if (filters?.dateFrom || filters?.dateTo) {
+    if (filters?.date) {
+      const startOfDay = new Date(filters.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(filters.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
       where.createdAt = {
-        ...(filters.dateFrom && { gte: filters.dateFrom }),
-        ...(filters.dateTo && { lte: filters.dateTo }),
+        gte: startOfDay,
+        lte: endOfDay,
       };
     }
 
