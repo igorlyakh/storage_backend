@@ -1,5 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { AdminScope, WarehouseRequestStatus } from 'generated/prisma/enums';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { AdminScope, Role, WarehouseRequestStatus } from 'generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
 import { OperationDto } from './dto/operation.dto';
@@ -110,7 +115,7 @@ export class WarehouseService {
     });
   }
 
-  async updateStatus(id: string, dto: UpdateRequestStatusDto) {
+  async updateStatus(id: string, dto: UpdateRequestStatusDto, user: any) {
     const request = await this.prisma.warehouseRequest.findUnique({
       where: { id },
       include: { items: true },
@@ -120,10 +125,15 @@ export class WarehouseService {
       throw new NotFoundException('Заявка не найдена');
     }
 
-    if (
-      dto.status === WarehouseRequestStatus.COMPLETED &&
-      request.status !== WarehouseRequestStatus.COMPLETED
-    ) {
+    if (dto.status === WarehouseRequestStatus.COMPLETED) {
+      if (user.role !== Role.WAREHOUSE) {
+        throw new ForbiddenException('Только для склада');
+      }
+
+      if (request.status === WarehouseRequestStatus.COMPLETED) {
+        throw new BadRequestException('Заказ уже закрыт');
+      }
+
       return this.prisma.$transaction(async tx => {
         for (const item of request.items) {
           await tx.warehouseStock.upsert({
@@ -145,9 +155,38 @@ export class WarehouseService {
       });
     }
 
+    if (
+      dto.status === WarehouseRequestStatus.APPROVED ||
+      dto.status === WarehouseRequestStatus.SENT
+    ) {
+      if (user.role !== Role.ADMIN) {
+        throw new ForbiddenException('Только для админа');
+      }
+
+      if (!user.adminScopes?.includes(request.category)) {
+        throw new ForbiddenException(
+          `У вас нет прав на управление заказами категории ${request.category}`,
+        );
+      }
+    }
+
     return this.prisma.warehouseRequest.update({
       where: { id },
       data: { status: dto.status },
+    });
+  }
+
+  async getWarehouseRequests() {
+    return this.prisma.warehouseRequest.findMany({
+      include: {
+        items: {
+          include: { product: true },
+        },
+        creator: {
+          select: { username: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }
