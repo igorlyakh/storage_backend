@@ -51,7 +51,7 @@ export class WarehouseController {
   }
 
   @Roles(Role.WAREHOUSE)
-  @Get()
+  @Get('requests')
   async getWarehouseRequests() {
     return this.warehouseService.getWarehouseRequests();
   }
