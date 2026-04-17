@@ -189,4 +189,15 @@ export class WarehouseService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async getWarehouseRequestById(id: string) {
+    return this.prisma.warehouseRequest.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+    });
+  }
 }

@@ -56,6 +56,7 @@ export class WarehouseController {
     return this.warehouseService.getWarehouseRequests();
   }
 
+  @Roles(Role.ADMIN)
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
@@ -64,5 +65,11 @@ export class WarehouseController {
   ) {
     const user = req.user;
     return this.warehouseService.updateStatus(id, dto, user);
+  }
+
+  @Roles(Role.ADMIN)
+  @Get(':id')
+  async getWarehouseRequestById(@Param('id') id: string) {
+    return this.warehouseService.getWarehouseRequestById(id);
   }
 }
