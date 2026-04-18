@@ -126,10 +126,6 @@ export class WarehouseService {
     }
 
     if (dto.status === WarehouseRequestStatus.COMPLETED) {
-      if (user.role !== Role.WAREHOUSE) {
-        throw new ForbiddenException('Только для склада');
-      }
-
       if (request.status === WarehouseRequestStatus.COMPLETED) {
         throw new BadRequestException('Заказ уже закрыт');
       }
