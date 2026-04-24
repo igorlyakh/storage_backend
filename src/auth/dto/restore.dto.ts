@@ -1,4 +1,4 @@
 export class RestoreDto {
   userId: string;
-  newPassword: string;
+  password: string;
 }

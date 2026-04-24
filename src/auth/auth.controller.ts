@@ -42,7 +42,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @Post('/restore')
-  async restore(dto: RestoreDto) {
+  async restore(@Body() dto: RestoreDto) {
     return await this.authService.restore(dto);
   }
 }

@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   async restore(dto: RestoreDto) {
-    const hashedPassword = await this.usersService.hashPassword(dto.newPassword);
+    const hashedPassword = await this.usersService.hashPassword(dto.password);
     return await this.prisma.user.update({
       where: { id: dto.userId },
       data: { password: hashedPassword },
