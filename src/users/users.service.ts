@@ -52,7 +52,17 @@ export class UsersService {
   }
 
   async getAllUsers() {
-    return await this.prisma.user.findMany({ include: { store: true } });
+    return await this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        isActive: true,
+        accessToken: true,
+        store: true,
+        adminScopes: true,
+      },
+    });
   }
 
   async updateRoleByName(dto: UpdateRoleDto) {
