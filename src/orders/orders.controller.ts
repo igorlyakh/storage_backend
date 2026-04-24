@@ -58,9 +58,18 @@ export class OrdersController {
   async getOrdersByStoreId(
     @CurrentUser('storeId') storeId: number,
     @Query('page') page?: string,
+    @Query('statuses') statuses?: string | string[],
+    @Query('date') date?: string,
   ) {
     const pageNumber = Math.max(1, Number(page) || 1);
-    return await this.ordersService.getAllOrdersByStoreId(storeId, pageNumber);
+    let parsedStatuses: string[] | undefined;
+    if (statuses) {
+      parsedStatuses = Array.isArray(statuses) ? statuses : statuses.split(',');
+    }
+    return await this.ordersService.getAllOrdersByStoreId(storeId, pageNumber, {
+      statuses: parsedStatuses,
+      date: date,
+    });
   }
 
   @Roles(Role.WAREHOUSE, Role.ADMIN)

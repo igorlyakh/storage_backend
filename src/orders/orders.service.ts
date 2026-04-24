@@ -34,14 +34,39 @@ export class OrdersService {
     }
   }
 
-  async getAllOrdersByStoreId(storeId: number, page: number = 1) {
+  async getAllOrdersByStoreId(
+    storeId: number,
+    page: number = 1,
+    filters?: { statuses?: string[]; date?: string },
+  ) {
     const LIMIT = 9;
     const skip = (page - 1) * LIMIT;
+
+    const statusesFilter = filters?.statuses?.length
+      ? filters.statuses
+      : ['NEW', 'IN_PROGRESS'];
+
+    const where: any = {
+      storeId,
+      status: { in: statusesFilter },
+    };
+
+    if (filters?.date) {
+      const startOfDay = new Date(filters.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(filters.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      where.createdAt = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+    }
+
     const [orders, totalCount] = await Promise.all([
       this.prisma.order.findMany({
-        where: {
-          storeId,
-        },
+        where,
         include: {
           items: {
             include: {
@@ -56,8 +81,9 @@ export class OrdersService {
         skip: skip,
         take: LIMIT,
       }),
-      this.prisma.order.count({ where: { storeId } }),
+      this.prisma.order.count({ where }),
     ]);
+
     return {
       data: orders,
       meta: {
