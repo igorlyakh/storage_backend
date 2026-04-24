@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from 'generated/prisma/client';
@@ -59,9 +59,13 @@ export class AuthService {
   }
 
   async restore(dto: RestoreDto) {
+    const user = await this.usersService.findUserById(dto.userId);
+    if (!user) {
+      throw new NotFoundException('User not found!');
+    }
     const hashedPassword = await this.usersService.hashPassword(dto.password);
     return await this.prisma.user.update({
-      where: { id: dto.userId },
+      where: { id: user.id },
       data: { password: hashedPassword },
     });
   }

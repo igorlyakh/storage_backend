@@ -39,6 +39,7 @@ export class AuthController {
     await this.authService.logout(user);
   }
 
+  @HttpCode(200)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @Post('/restore')
