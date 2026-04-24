@@ -30,7 +30,10 @@ export class ProductService {
   }
 
   async getAllProducts() {
-    return await this.prisma.product.findMany({ include: { stock: true } });
+    return await this.prisma.product.findMany({
+      include: { stock: true },
+      orderBy: { name: 'desc' },
+    });
   }
 
   async findProductByName(name: string) {
