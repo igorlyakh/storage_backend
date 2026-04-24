@@ -6,6 +6,7 @@ import { Role } from 'generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login.dto';
+import { RestoreDto } from './dto/restore.dto';
 
 @Injectable()
 export class AuthService {
@@ -54,6 +55,14 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: { accessToken: null },
+    });
+  }
+
+  async restore(dto: RestoreDto) {
+    const hashedPassword = await this.usersService.hashPassword(dto.newPassword);
+    return await this.prisma.user.update({
+      where: { id: dto.userId },
+      data: { password: hashedPassword },
     });
   }
 }

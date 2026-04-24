@@ -8,10 +8,13 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from 'generated/prisma/client';
+import { Role, User } from 'generated/prisma/client';
+import { Roles } from 'src/decorators/role.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
+import { RolesGuard } from 'src/guards/role.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RestoreDto } from './dto/restore.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -34,5 +37,12 @@ export class AuthController {
   @Post('/logout')
   async logout(@CurrentUser() user: User) {
     await this.authService.logout(user);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('/restore')
+  async restore(dto: RestoreDto) {
+    return await this.authService.restore(dto);
   }
 }
