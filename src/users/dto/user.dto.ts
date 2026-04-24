@@ -1,5 +1,12 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
-import { Role } from 'generated/prisma/enums';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { AdminScope, Role } from 'generated/prisma/enums';
 
 export class UserDto {
   @IsNotEmpty()
@@ -16,4 +23,9 @@ export class UserDto {
 
   @IsOptional()
   storeId: number;
+
+  @IsOptional()
+  @IsEnum(AdminScope, { each: true })
+  @IsArray()
+  adminScopes: AdminScope[];
 }
