@@ -69,4 +69,9 @@ export class ProductController {
   async updateProduct(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return await this.productService.updateProductById(id, dto);
   }
+
+  @Get('')
+  async getAllProductsByBrands(@Body() brandIds: string[]) {
+    return await this.productService.getAllProductsByBrands(brandIds);
+  }
 }

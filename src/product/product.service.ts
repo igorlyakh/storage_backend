@@ -39,6 +39,22 @@ export class ProductService {
     });
   }
 
+  async getAllProductsByBrands(brandIds: string[]) {
+    return await this.prisma.product.findMany({
+      where: {
+        brands: {
+          some: {
+            id: {
+              in: brandIds,
+            },
+          },
+        },
+      },
+      include: { stock: true },
+      orderBy: { name: 'desc' },
+    });
+  }
+
   async findProductByName(name: string) {
     return await this.prisma.product.findUnique({ where: { name } });
   }
