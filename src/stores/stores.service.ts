@@ -7,7 +7,10 @@ export class StoresService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findStoreByName(name: string) {
-    const store = await this.prisma.store.findUnique({ where: { name } });
+    const store = await this.prisma.store.findUnique({
+      where: { name },
+      include: { brands: true },
+    });
     return store;
   }
 
@@ -36,6 +39,6 @@ export class StoresService {
   }
 
   async getAllStores() {
-    return await this.prisma.store.findMany();
+    return await this.prisma.store.findMany({ include: { brands: true } });
   }
 }
