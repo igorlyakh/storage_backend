@@ -55,6 +55,17 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model Brand {
+  id   String @id @default(uuid())
+  name String @unique
+
+  stores   Store[]
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Store {
   id   Int    @id @default(autoincrement())
   name String @unique
@@ -62,21 +73,24 @@ model Store {
   users  User[]
   orders Order[]
 
+  brand Brand[]
+
   createdAt DateTime @default(now())
 }
 
-// PRODUCTS & STOCK
+//! PRODUCTS & STOCK
 
 model Product {
   id            String     @id @default(uuid())
   name          String     @unique
   category      AdminScope
   isEnabled     Boolean    @default(true)
-  limitPerOrder Int? // null = без ограничения
+  limitPerOrder Int?
 
   stock        WarehouseStock?
   orderItems   OrderItem[]
   requestItems WarehouseRequestItem[]
+  brand        Brand[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
