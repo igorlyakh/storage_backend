@@ -12,6 +12,7 @@ export class OrdersService {
       return await this.prisma.order.create({
         data: {
           storeId,
+          customRequest: dto.customRequest,
           items: {
             create: dto.items.map(item => ({
               requestedQty: item.quantity,
