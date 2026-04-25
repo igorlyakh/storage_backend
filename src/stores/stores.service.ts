@@ -16,7 +16,14 @@ export class StoresService {
     if (candidate) {
       throw new ConflictException('A store with this name already exists!');
     }
-    const store = await this.prisma.store.create({ data: { ...dto } });
+    const store = await this.prisma.store.create({
+      data: {
+        name: dto.name,
+        brands: {
+          connect: dto.brandIds.map(id => ({ id })),
+        },
+      },
+    });
     return store;
   }
 

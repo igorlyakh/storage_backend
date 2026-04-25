@@ -73,7 +73,7 @@ model Store {
   users  User[]
   orders Order[]
 
-  brand Brand[]
+  brands Brand[]
 
   createdAt DateTime @default(now())
 }
@@ -90,7 +90,7 @@ model Product {
   stock        WarehouseStock?
   orderItems   OrderItem[]
   requestItems WarehouseRequestItem[]
-  brand        Brand[]
+  brands       Brand[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
