@@ -11,8 +11,10 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { User } from 'generated/prisma/client';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
+import { CurrentUser } from 'src/decorators/user.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { ScopeAccessGuard } from 'src/guards/scopeAccess.guard';
 import { ScopeCreateGuard } from 'src/guards/scopeCreate.guard';
@@ -70,8 +72,8 @@ export class ProductController {
     return await this.productService.updateProductById(id, dto);
   }
 
-  @Get('')
-  async getAllProductsByBrands(@Body() brandsIds: string[]) {
-    return await this.productService.getAllProductsByBrands(brandsIds);
+  @Get('/brands')
+  async getAllProductsByBrands(@Body() brandsIds: string[], @CurrentUser() user: User) {
+    return await this.productService.getAllProductsByBrands(user.storeId);
   }
 }

@@ -41,4 +41,11 @@ export class StoresService {
   async getAllStores() {
     return await this.prisma.store.findMany({ include: { brands: true } });
   }
+
+  async getStoreById(id: number) {
+    return await this.prisma.store.findUnique({
+      where: { id },
+      include: { brands: true },
+    });
+  }
 }

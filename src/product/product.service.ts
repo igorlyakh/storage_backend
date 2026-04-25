@@ -1,11 +1,15 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { StoresService } from 'src/stores/stores.service';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storeService: StoresService,
+  ) {}
 
   async createProduct(dto: CreateProductDto) {
     const candidate = await this.prisma.product.findUnique({
@@ -42,7 +46,10 @@ export class ProductService {
     });
   }
 
-  async getAllProductsByBrands(brandsIds: string[]) {
+  async getAllProductsByBrands(storeId: number) {
+    const store = await this.storeService.getStoreById(storeId);
+    const brandsIds = store.brands.map(brand => brand.id);
+
     return await this.prisma.product.findMany({
       where: {
         brands: {
@@ -53,7 +60,7 @@ export class ProductService {
           },
         },
       },
-      include: { stock: true },
+      include: { stock: true, brands: true },
       orderBy: { name: 'desc' },
     });
   }
