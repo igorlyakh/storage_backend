@@ -71,7 +71,7 @@ export class ProductController {
   }
 
   @Get('')
-  async getAllProductsByBrands(@Body() brandIds: string[]) {
-    return await this.productService.getAllProductsByBrands(brandIds);
+  async getAllProductsByBrands(@Body() brandsIds: string[]) {
+    return await this.productService.getAllProductsByBrands(brandsIds);
   }
 }

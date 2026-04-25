@@ -31,5 +31,5 @@ export class CreateProductDto {
   @IsArray()
   @IsString({ each: true })
   @IsNotEmpty()
-  brandIds: string[];
+  brandsIds: string[];
 }
