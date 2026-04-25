@@ -21,6 +21,9 @@ export class ProductService {
             quantity: initialQuantity ?? 0,
           },
         },
+        brands: {
+          connect: dto.brandIds.map(id => ({ id })),
+        },
       },
       include: {
         stock: true,
