@@ -95,7 +95,7 @@ export class ProductService {
       data: updateData,
       include: {
         stock: true,
-        brands: true, // Обязательно возвращаем бренды, чтобы фронтенд получил свежие данные
+        brands: true,
       },
     });
   }
