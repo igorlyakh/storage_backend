@@ -1,4 +1,13 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 import { AdminScope } from 'generated/prisma/enums';
 
 export class UpdateProductDto {
@@ -18,4 +27,9 @@ export class UpdateProductDto {
   @IsEnum(AdminScope)
   @IsOptional()
   category?: AdminScope;
+
+  @IsArray()
+  @IsUUID('all', { each: true })
+  @IsOptional()
+  brandIds?: string[];
 }

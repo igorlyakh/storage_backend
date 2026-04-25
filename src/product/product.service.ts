@@ -80,10 +80,23 @@ export class ProductService {
       throw new NotFoundException('Product not found!');
     }
 
+    const { brandIds, ...restData } = dto;
+
+    const updateData: any = { ...restData };
+
+    if (brandIds !== undefined) {
+      updateData.brands = {
+        set: brandIds.map(brandId => ({ id: brandId })),
+      };
+    }
+
     return await this.prisma.product.update({
       where: { id },
-      data: { ...dto },
-      include: { stock: true },
+      data: updateData,
+      include: {
+        stock: true,
+        brands: true, // Обязательно возвращаем бренды, чтобы фронтенд получил свежие данные
+      },
     });
   }
 }
