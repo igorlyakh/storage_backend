@@ -42,14 +42,16 @@ export class OrdersController {
     @Query('page') page?: string,
     @Query('storeIds') storeIds?: string,
     @Query('statuses') statuses?: string,
-    @Query('date') date?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     const pageNumber = Math.max(1, Number(page) || 1);
 
     return await this.ordersService.getAllOrders(pageNumber, {
       storeIds: storeIds ? storeIds.split(',').map(id => Number(id)) : undefined,
       statuses: statuses ? statuses.split(',') : undefined,
-      date: date,
+      startDate: startDate,
+      endDate: endDate,
     });
   }
 

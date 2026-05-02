@@ -98,7 +98,12 @@ export class OrdersService {
 
   async getAllOrders(
     page: number = 1,
-    filters?: { storeIds?: number[]; statuses?: string[]; date?: string },
+    filters?: {
+      storeIds?: number[];
+      statuses?: string[];
+      startDate?: string;
+      endDate?: string;
+    },
   ) {
     const LIMIT = 9;
     const skip = (page - 1) * LIMIT;
@@ -115,17 +120,20 @@ export class OrdersService {
       where.storeId = { in: filters.storeIds };
     }
 
-    if (filters?.date) {
-      const startOfDay = new Date(filters.date);
-      startOfDay.setHours(0, 0, 0, 0);
+    if (filters?.startDate || filters?.endDate) {
+      where.createdAt = {};
 
-      const endOfDay = new Date(filters.date);
-      endOfDay.setHours(23, 59, 59, 999);
+      if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        start.setHours(0, 0, 0, 0);
+        where.createdAt.gte = start;
+      }
 
-      where.createdAt = {
-        gte: startOfDay,
-        lte: endOfDay,
-      };
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
     }
 
     const [orders, totalCount] = await Promise.all([
