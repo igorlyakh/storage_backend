@@ -65,7 +65,7 @@ export class WarehouseService {
 
     const products = await this.prisma.product.findMany({
       where: { id: { in: productIds } },
-      select: { id: true, category: true },
+      select: { id: true, tag: true },
     });
 
     if (products.length !== dto.items.length) {
@@ -76,10 +76,10 @@ export class WarehouseService {
 
     for (const item of dto.items) {
       const product = products.find(p => p.id === item.productId);
-      if (!groupedItems.has(product.category)) {
-        groupedItems.set(product.category, []);
+      if (!groupedItems.has(product.tag)) {
+        groupedItems.set(product.tag, []);
       }
-      groupedItems.get(product.category).push(item);
+      groupedItems.get(product.tag).push(item);
     }
 
     const requests = [];
