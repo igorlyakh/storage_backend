@@ -9,75 +9,69 @@ export class StatisticsService {
     const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
     const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-    const orderWhere: any = {
-      createdAt: { gte: startDate, lte: endDate },
-    };
-
-    if (productId) {
-      orderWhere.items = { some: { productId } };
-    }
-
-    const orders = await this.prisma.order.findMany({
-      where: orderWhere,
-      select: {
-        store: { select: { id: true, name: true } },
-        items: {
-          where: productId ? { productId } : undefined,
-          select: { requestedQty: true },
-        },
-      },
+    const allStores = await this.prisma.store.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
     });
 
-    const statsMap = new Map();
+    const result = allStores.map(store => ({
+      storeId: store.id,
+      storeName: store.name,
+      value: 0,
+    }));
 
-    for (const order of orders) {
-      const storeId = order.store.id;
+    const isProductFilterActive =
+      productId && productId !== 'null' && productId !== 'undefined' && productId !== '';
 
-      if (!statsMap.has(storeId)) {
-        statsMap.set(storeId, {
-          storeId,
-          storeName: order.store.name,
-          totalOrders: 0,
-          totalItems: 0,
-        });
-      }
+    if (!isProductFilterActive) {
+      const orderCounts = await this.prisma.order.groupBy({
+        by: ['storeId'],
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        _count: {
+          id: true,
+        },
+      });
 
-      const storeStat = statsMap.get(storeId);
-      storeStat.totalOrders += 1;
+      orderCounts.forEach(oc => {
+        const index = result.findIndex(r => r.storeId === oc.storeId);
+        if (index !== -1) {
+          result[index].value = oc._count.id;
+        }
+      });
+    } else {
+      const orders = await this.prisma.order.findMany({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          items: { some: { productId } },
+        },
+        select: {
+          storeId: true,
+          items: {
+            where: { productId },
+            select: { requestedQty: true },
+          },
+        },
+      });
 
-      const itemsSum = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
-      storeStat.totalItems += itemsSum;
+      orders.forEach(order => {
+        const index = result.findIndex(r => r.storeId === order.storeId);
+        if (index !== -1) {
+          const itemsSum = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
+          result[index].value += itemsSum;
+        }
+      });
     }
 
-    return Array.from(statsMap.values()).sort((a, b) =>
-      a.storeName.localeCompare(b.storeName),
-    );
+    return result;
   }
 
   async getYearlyStats(year: number, productId?: string) {
     const startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0));
     const endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
 
-    const orderWhere: any = {
-      createdAt: { gte: startDate, lte: endDate },
-    };
-
-    if (productId) {
-      orderWhere.items = { some: { productId } };
-    }
-
-    const orders = await this.prisma.order.findMany({
-      where: orderWhere,
-      select: {
-        createdAt: true,
-        store: { select: { name: true } },
-        items: {
-          where: productId ? { productId } : undefined,
-          select: { requestedQty: true },
-        },
-      },
-    });
-
+    const allStores = await this.prisma.store.findMany({ select: { name: true } });
     const monthNames = [
       'Jan',
       'Feb',
@@ -93,23 +87,54 @@ export class StatisticsService {
       'Dec',
     ];
 
-    const monthlyData = monthNames.map(month => ({
-      month,
-      stores: {} as Record<string, { orders: number; items: number }>,
-    }));
+    const monthlyData = monthNames.map(month => {
+      const monthRow: any = { month };
+      allStores.forEach(store => {
+        monthRow[store.name] = 0;
+      });
+      return monthRow;
+    });
 
-    for (const order of orders) {
-      const monthIndex = order.createdAt.getUTCMonth();
-      const storeName = order.store.name;
+    const isProductFilterActive =
+      productId && productId !== 'null' && productId !== 'undefined' && productId !== '';
 
-      if (!monthlyData[monthIndex].stores[storeName]) {
-        monthlyData[monthIndex].stores[storeName] = { orders: 0, items: 0 };
-      }
+    if (!isProductFilterActive) {
+      const orders = await this.prisma.order.findMany({
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: { createdAt: true, store: { select: { name: true } } },
+      });
 
-      monthlyData[monthIndex].stores[storeName].orders += 1;
+      orders.forEach(order => {
+        const monthIndex = order.createdAt.getUTCMonth();
+        const storeName = order.store.name;
+        if (monthlyData[monthIndex][storeName] !== undefined) {
+          monthlyData[monthIndex][storeName] += 1;
+        }
+      });
+    } else {
+      const orders = await this.prisma.order.findMany({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          items: { some: { productId } },
+        },
+        select: {
+          createdAt: true,
+          store: { select: { name: true } },
+          items: {
+            where: { productId },
+            select: { requestedQty: true },
+          },
+        },
+      });
 
-      const itemsSum = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
-      monthlyData[monthIndex].stores[storeName].items += itemsSum;
+      orders.forEach(order => {
+        const monthIndex = order.createdAt.getUTCMonth();
+        const storeName = order.store.name;
+        if (monthlyData[monthIndex][storeName] !== undefined) {
+          const itemsSum = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
+          monthlyData[monthIndex][storeName] += itemsSum;
+        }
+      });
     }
 
     return monthlyData;
