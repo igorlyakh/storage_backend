@@ -13,11 +13,11 @@ export class ScopeCreateGuard implements CanActivate {
 
     if (!user || user.role !== 'ADMIN') return true;
 
-    if (!body.category) {
-      throw new BadRequestException('Category is required');
+    if (!body.tag) {
+      throw new BadRequestException('Tag is required');
     }
 
-    if (!user.adminScopes.includes(body.category)) {
+    if (!user.adminScopes.includes(body.tag)) {
       throw new ForbiddenException(`You do not have permission: ${body.category}`);
     }
     return true;
