@@ -19,6 +19,15 @@ enum AdminScope {
   PACKAGING // Вещи Цура
 }
 
+enum Categories {
+  BAGS
+  HANGERS
+  LABELS
+  TAGS
+  PACKAGING
+  PRESENTS_PACKING
+}
+
 enum OrderStatus {
   NEW // создан магазином
   IN_PROGRESS // в работе на марлоге
@@ -83,7 +92,7 @@ model Store {
 model Product {
   id            String     @id @default(uuid())
   name          String     @unique
-  category      AdminScope
+  category      Categories
   isEnabled     Boolean    @default(true)
   limitPerOrder Int?
 
