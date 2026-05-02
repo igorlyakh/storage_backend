@@ -93,6 +93,7 @@ model Product {
   id            String     @id @default(uuid())
   name          String     @unique
   category      Categories
+  tag           AdminScope
   isEnabled     Boolean    @default(true)
   limitPerOrder Int?
 
