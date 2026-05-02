@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 @Injectable()
 export class StatisticsService {
   constructor(private prisma: PrismaService) {}
+
   async getMonthlyStats(year: number, month: number, productId?: string) {
     const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
     const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
@@ -42,7 +43,6 @@ export class StatisticsService {
       }
 
       const storeStat = statsMap.get(storeId);
-
       storeStat.totalOrders += 1;
 
       const itemsSum = order.items.reduce((sum, item) => sum + item.requestedQty, 0);

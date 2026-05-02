@@ -1,10 +1,11 @@
 import { Controller, Get, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { StatisticsService } from './statistics.service';
 
-@UseGuards(RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles(Role.ADMIN, Role.WAREHOUSE)
 @Controller('statistics')
 export class StatisticsController {
