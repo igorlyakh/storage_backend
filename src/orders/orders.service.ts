@@ -177,9 +177,14 @@ export class OrdersService {
         where: { id: dto.orderId },
         include: { items: true },
       });
+
       if (!order) throw new NotFoundException('Order not found!');
-      if (order.status === 'COMPLETED')
-        throw new BadRequestException('Order is already completed!');
+
+      if (order.status !== 'IN_PROGRESS') {
+        throw new BadRequestException(
+          `Order cannot be sent! Current status is ${order.status}, expected IN_PROGRESS.`,
+        );
+      }
 
       const sendedMap = new Map<string, number>();
       if (dto.items) {
@@ -197,19 +202,34 @@ export class OrdersService {
         });
 
         await tx.orderItem.update({
-          where: {
-            id: item.id,
-          },
-          data: {
-            shippedQty: actualQty,
-          },
+          where: { id: item.id },
+          data: { shippedQty: actualQty },
         });
       }
 
       return await tx.order.update({
         where: { id: dto.orderId },
-        data: { status: 'COMPLETED' },
+        data: { status: 'SENT' },
       });
+    });
+  }
+
+  async completeOrder(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) throw new NotFoundException('Order not found!');
+
+    if (order.status !== 'SENT') {
+      throw new BadRequestException(
+        `Order cannot be completed! Current status is ${order.status}, expected SENT.`,
+      );
+    }
+
+    return await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'COMPLETED' },
     });
   }
 

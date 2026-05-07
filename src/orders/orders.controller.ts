@@ -97,4 +97,10 @@ export class OrdersController {
     const order = await this.ordersService.getOrderById(id);
     return order;
   }
+
+  @Roles(Role.STORE, Role.ADMIN, Role.WAREHOUSE)
+  @Patch('/complete')
+  async completeOrder(@Body('orderId') orderId: string) {
+    return await this.ordersService.completeOrder(orderId);
+  }
 }

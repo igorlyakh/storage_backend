@@ -17,7 +17,7 @@ import { CreateStoreDto } from './dto/createStore.dto';
 import { StoresService } from './stores.service';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.ADMIN, Role.WAREHOUSE)
 @Controller('stores')
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
