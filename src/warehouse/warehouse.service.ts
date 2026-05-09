@@ -69,7 +69,7 @@ export class WarehouseService {
     });
 
     if (products.length !== dto.items.length) {
-      throw new BadRequestException('Один или несколько товаров не найдены');
+      throw new BadRequestException('Products not found');
     }
 
     const groupedItems = new Map<AdminScope, { productId: string; quantity: number }[]>();
@@ -122,12 +122,12 @@ export class WarehouseService {
     });
 
     if (!request) {
-      throw new NotFoundException('Заявка не найдена');
+      throw new NotFoundException('Order not found');
     }
 
     if (dto.status === WarehouseRequestStatus.COMPLETED) {
       if (request.status === WarehouseRequestStatus.COMPLETED) {
-        throw new BadRequestException('Заказ уже закрыт');
+        throw new BadRequestException('Order already closed');
       }
 
       return this.prisma.$transaction(async tx => {
@@ -156,13 +156,11 @@ export class WarehouseService {
       dto.status === WarehouseRequestStatus.SENT
     ) {
       if (user.role !== Role.ADMIN) {
-        throw new ForbiddenException('Только для админа');
+        throw new ForbiddenException('Only for admins');
       }
 
       if (!user.adminScopes?.includes(request.category)) {
-        throw new ForbiddenException(
-          `У вас нет прав на управление заказами категории ${request.category}`,
-        );
+        throw new ForbiddenException(`Not your scope: ${request.category}`);
       }
     }
 

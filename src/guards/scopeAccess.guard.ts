@@ -26,13 +26,13 @@ export class ScopeAccessGuard implements CanActivate {
 
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
-      select: { category: true },
+      select: { tag: true },
     });
 
     if (!product) throw new NotFoundException();
 
-    if (!user.adminScopes.includes(product.category)) {
-      throw new ForbiddenException(`You do not have permission: ${product.category}`);
+    if (!user.adminScopes.includes(product.tag)) {
+      throw new ForbiddenException(`You do not have permission: ${product.tag}`);
     }
 
     return true;

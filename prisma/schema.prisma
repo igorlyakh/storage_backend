@@ -14,9 +14,8 @@ enum Role {
 }
 
 enum AdminScope {
-  BAGS // пакеты
-  LABELS // наклейки
-  PACKAGING // Вещи Цура
+  NCG // Цур
+  ADMINISTRATIVE // Света
 }
 
 enum Categories {
@@ -30,7 +29,7 @@ enum Categories {
 
 enum OrderStatus {
   NEW // создан магазином
-  IN_PROGRESS // в работе на марлоге
+  IN_PROGRESS // в работе в марлоге
   SENT // отправлен
   COMPLETED // закрыт
 }
