@@ -11,23 +11,22 @@ export class StatisticsService {
   async getStatisticsData(filters: GetStatisticsDto) {
     const { startDate, endDate, productId, storeId } = filters;
 
-    const where: any = {};
-
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) {
-        where.createdAt.gte = new Date(startDate.setHours(0, 0, 0, 0));
-      }
-      if (endDate) {
-        where.createdAt.lte = new Date(endDate.setHours(23, 59, 59, 999));
-      }
+    if (!startDate) {
+      return [];
     }
 
-    if (storeId) {
+    const where: any = {
+      createdAt: {
+        gte: new Date(startDate),
+        lte: endDate ? new Date(endDate) : new Date(startDate),
+      },
+    };
+
+    if (storeId && storeId !== 'null' && storeId !== 'undefined') {
       where.storeId = storeId;
     }
 
-    if (productId) {
+    if (productId && productId !== 'null' && productId !== 'undefined') {
       where.items = { some: { productId } };
     }
 
