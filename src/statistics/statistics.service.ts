@@ -1,142 +1,100 @@
 import { Injectable } from '@nestjs/common';
+import * as ExcelJS from 'exceljs';
+import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
+import { GetStatisticsDto } from './dto/getStatistics.dto';
 
 @Injectable()
 export class StatisticsService {
   constructor(private prisma: PrismaService) {}
 
-  async getMonthlyStats(year: number, month: number, productId?: string) {
-    const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-    const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+  async getStatisticsData(filters: GetStatisticsDto) {
+    const { startDate, endDate, productId, storeId } = filters;
 
-    const allStores = await this.prisma.store.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: 'asc' },
-    });
+    const where: any = {};
 
-    const result = allStores.map(store => ({
-      storeId: store.id,
-      storeName: store.name,
-      value: 0,
-    }));
-
-    const isProductFilterActive =
-      productId && productId !== 'null' && productId !== 'undefined' && productId !== '';
-
-    if (!isProductFilterActive) {
-      const orderCounts = await this.prisma.order.groupBy({
-        by: ['storeId'],
-        where: {
-          createdAt: { gte: startDate, lte: endDate },
-        },
-        _count: {
-          id: true,
-        },
-      });
-
-      orderCounts.forEach(oc => {
-        const index = result.findIndex(r => r.storeId === oc.storeId);
-        if (index !== -1) {
-          result[index].value = oc._count.id;
-        }
-      });
-    } else {
-      const orders = await this.prisma.order.findMany({
-        where: {
-          createdAt: { gte: startDate, lte: endDate },
-          items: { some: { productId } },
-        },
-        select: {
-          storeId: true,
-          items: {
-            where: { productId },
-            select: { requestedQty: true },
-          },
-        },
-      });
-
-      orders.forEach(order => {
-        const index = result.findIndex(r => r.storeId === order.storeId);
-        if (index !== -1) {
-          const itemsSum = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
-          result[index].value += itemsSum;
-        }
-      });
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate.setHours(0, 0, 0, 0));
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate.setHours(23, 59, 59, 999));
+      }
     }
 
-    return result;
+    if (storeId) {
+      where.storeId = storeId;
+    }
+
+    if (productId) {
+      where.items = { some: { productId } };
+    }
+
+    const orders = await this.prisma.order.findMany({
+      where,
+      select: {
+        createdAt: true,
+        store: { select: { id: true, name: true } },
+        items: productId
+          ? { where: { productId }, select: { requestedQty: true } }
+          : undefined,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const flatData = orders.map(order => {
+      const dateKey = order.createdAt.toISOString().split('T')[0];
+
+      let value = 1;
+      if (productId && order.items) {
+        value = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
+      }
+
+      return {
+        date: dateKey,
+        storeName: order.store.name,
+        value,
+      };
+    });
+
+    const aggregated = flatData.reduce(
+      (acc, curr) => {
+        const key = `${curr.date}_${curr.storeName}`;
+        if (!acc[key]) {
+          acc[key] = { ...curr };
+        } else {
+          acc[key].value += curr.value;
+        }
+        return acc;
+      },
+      {} as Record<string, { date: string; storeName: string; value: number }>,
+    );
+
+    return Object.values(aggregated);
   }
 
-  async getYearlyStats(year: number, productId?: string) {
-    const startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0));
-    const endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+  async generateExcelReport(filters: GetStatisticsDto): Promise<Buffer> {
+    const data = await this.getStatisticsData(filters);
 
-    const allStores = await this.prisma.store.findMany({ select: { name: true } });
-    const monthNames = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const templatePath = path.join(
+      process.cwd(),
+      'src',
+      'templates',
+      'statistics-template.xlsx',
+    );
 
-    const monthlyData = monthNames.map(month => {
-      const monthRow: any = { month };
-      allStores.forEach(store => {
-        monthRow[store.name] = 0;
-      });
-      return monthRow;
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(templatePath);
+
+    const dataSheet = workbook.getWorksheet('Data');
+
+    dataSheet.spliceRows(2, dataSheet.rowCount - 1);
+
+    data.forEach(row => {
+      dataSheet.addRow([row.date, row.storeName, row.value]);
     });
 
-    const isProductFilterActive =
-      productId && productId !== 'null' && productId !== 'undefined' && productId !== '';
-
-    if (!isProductFilterActive) {
-      const orders = await this.prisma.order.findMany({
-        where: { createdAt: { gte: startDate, lte: endDate } },
-        select: { createdAt: true, store: { select: { name: true } } },
-      });
-
-      orders.forEach(order => {
-        const monthIndex = order.createdAt.getUTCMonth();
-        const storeName = order.store.name;
-        if (monthlyData[monthIndex][storeName] !== undefined) {
-          monthlyData[monthIndex][storeName] += 1;
-        }
-      });
-    } else {
-      const orders = await this.prisma.order.findMany({
-        where: {
-          createdAt: { gte: startDate, lte: endDate },
-          items: { some: { productId } },
-        },
-        select: {
-          createdAt: true,
-          store: { select: { name: true } },
-          items: {
-            where: { productId },
-            select: { requestedQty: true },
-          },
-        },
-      });
-
-      orders.forEach(order => {
-        const monthIndex = order.createdAt.getUTCMonth();
-        const storeName = order.store.name;
-        if (monthlyData[monthIndex][storeName] !== undefined) {
-          const itemsSum = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
-          monthlyData[monthIndex][storeName] += itemsSum;
-        }
-      });
-    }
-
-    return monthlyData;
+    return (await workbook.xlsx.writeBuffer()) as unknown as Buffer;
   }
 }
