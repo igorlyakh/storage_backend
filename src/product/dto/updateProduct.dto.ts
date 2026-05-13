@@ -8,7 +8,7 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import { AdminScope } from 'generated/prisma/enums';
+import { Categories } from 'generated/prisma/enums';
 
 export class UpdateProductDto {
   @IsBoolean()
@@ -24,9 +24,9 @@ export class UpdateProductDto {
   @Min(1)
   limitPerOrder?: number;
 
-  @IsEnum(AdminScope)
+  @IsEnum(Categories)
   @IsOptional()
-  category?: AdminScope;
+  category?: Categories;
 
   @IsArray()
   @IsUUID('all', { each: true })
