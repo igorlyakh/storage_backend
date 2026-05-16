@@ -28,7 +28,7 @@ export class ProductService {
           },
         },
         category: {
-          connect: productData.category,
+          connect: { id: productData.category },
         },
         brands: {
           connect: brandsIds.map(id => ({ id })),
@@ -37,6 +37,7 @@ export class ProductService {
       include: {
         stock: true,
         brands: true,
+        category: true,
       },
     });
 
@@ -44,7 +45,7 @@ export class ProductService {
   }
   async getAllProducts() {
     return await this.prisma.product.findMany({
-      include: { stock: true, brands: true },
+      include: { stock: true, brands: true, category: true },
       orderBy: { name: 'desc' },
     });
   }
@@ -63,7 +64,7 @@ export class ProductService {
           },
         },
       },
-      include: { stock: true, brands: true },
+      include: { stock: true, brands: true, category: true },
       orderBy: { name: 'desc' },
     });
   }
