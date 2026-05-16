@@ -110,7 +110,7 @@ export class WarehouseService {
         category: { in: adminScopes },
       },
       include: {
-        items: { include: { product: true } },
+        items: { include: { product: { include: { category: true } } } },
       },
     });
   }
@@ -174,7 +174,7 @@ export class WarehouseService {
     return this.prisma.warehouseRequest.findMany({
       include: {
         items: {
-          include: { product: true },
+          include: { product: { include: { category: true } } },
         },
         creator: {
           select: { username: true },
@@ -189,7 +189,7 @@ export class WarehouseService {
       where: { id },
       include: {
         items: {
-          include: { product: true },
+          include: { product: { include: { category: true } } },
         },
       },
     });
