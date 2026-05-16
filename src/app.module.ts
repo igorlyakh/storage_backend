@@ -8,8 +8,9 @@ import { WarehouseModule } from './warehouse/warehouse.module';
 import { OrdersModule } from './orders/orders.module';
 import { BrandsModule } from './brands/brands.module';
 import { StatisticsModule } from './statistics/statistics.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, StoresModule, ProductModule, WarehouseModule, OrdersModule, BrandsModule, StatisticsModule],
+  imports: [PrismaModule, UsersModule, AuthModule, StoresModule, ProductModule, WarehouseModule, OrdersModule, BrandsModule, StatisticsModule, CategoryModule],
 })
 export class AppModule {}

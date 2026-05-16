@@ -1,14 +1,13 @@
 import {
   IsArray,
   IsBoolean,
-  IsEnum,
   IsInt,
   IsOptional,
   IsString,
   IsUUID,
   Min,
 } from 'class-validator';
-import { Categories } from 'generated/prisma/enums';
+import { Categories } from 'generated/prisma/client';
 
 export class UpdateProductDto {
   @IsBoolean()
@@ -24,7 +23,6 @@ export class UpdateProductDto {
   @Min(1)
   limitPerOrder?: number;
 
-  @IsEnum(Categories)
   @IsOptional()
   category?: Categories;
 

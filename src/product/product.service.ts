@@ -27,6 +27,9 @@ export class ProductService {
             quantity: initialQuantity ?? 0,
           },
         },
+        category: {
+          connect: productData.category,
+        },
         brands: {
           connect: brandsIds.map(id => ({ id })),
         },
