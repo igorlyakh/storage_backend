@@ -40,7 +40,7 @@ export class OrdersService {
     page: number = 1,
     filters?: { statuses?: string[]; date?: string },
   ) {
-    const LIMIT = 9;
+    const LIMIT = 12;
     const skip = (page - 1) * LIMIT;
 
     const statusesFilter = filters?.statuses?.length
@@ -105,7 +105,7 @@ export class OrdersService {
       endDate?: string;
     },
   ) {
-    const LIMIT = 9;
+    const LIMIT = 12;
     const skip = (page - 1) * LIMIT;
 
     const statusesFilter = filters?.statuses?.length
