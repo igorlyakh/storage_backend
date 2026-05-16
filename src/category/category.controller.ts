@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/decorators/role.decorator';
@@ -11,6 +19,12 @@ import { CreateCategoryDto } from './dto/createCategoryDto';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
   @Roles(Role.ADMIN)
   @Post()
   async createCategory(@Body() dto: CreateCategoryDto) {
