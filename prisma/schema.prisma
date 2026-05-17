@@ -90,6 +90,7 @@ model Store {
 
 model Product {
   id            String      @id @default(uuid())
+  article       String      @default("000000-00")
   name          String      @unique
   category      Categories? @relation(fields: [categoryId], references: [id])
   categoryId    String?
