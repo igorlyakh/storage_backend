@@ -84,13 +84,21 @@ export class ProductService {
       throw new NotFoundException('Product not found!');
     }
 
-    const { brandIds, ...restData } = dto;
+    const { brandIds, category, ...restData } = dto;
 
     const updateData: any = { ...restData };
 
     if (brandIds !== undefined) {
       updateData.brands = {
         set: brandIds.map(brandId => ({ id: brandId })),
+      };
+    }
+
+    if (category !== undefined && category !== null) {
+      const categoryId = typeof category === 'object' ? category.id : category;
+
+      updateData.category = {
+        connect: { id: categoryId },
       };
     }
 
