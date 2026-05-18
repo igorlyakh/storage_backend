@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
 import { OperationDto } from './dto/operation.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
+import { UpdateRequestItemsDto } from './dto/updated-request-items.dto';
 
 @Injectable()
 export class WarehouseService {
@@ -191,6 +192,32 @@ export class WarehouseService {
         items: {
           include: { product: { include: { category: true } } },
         },
+      },
+    });
+  }
+
+  async updateRequestItems(id: string, dto: UpdateRequestItemsDto) {
+    const request = await this.prisma.warehouseRequest.findUnique({
+      where: { id },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Request not found');
+    }
+
+    return this.prisma.warehouseRequest.update({
+      where: { id },
+      data: {
+        items: {
+          deleteMany: {},
+          create: dto.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+        },
+      },
+      include: {
+        items: { include: { product: { include: { category: true } } } },
       },
     });
   }

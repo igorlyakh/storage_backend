@@ -16,6 +16,7 @@ import { ScopeAccessGuard } from 'src/guards/scopeAccess.guard';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
 import { OperationDto } from './dto/operation.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
+import { UpdateRequestItemsDto } from './dto/updated-request-items.dto';
 import { WarehouseService } from './warehouse.service';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -69,5 +70,11 @@ export class WarehouseController {
   @Get(':id')
   async getWarehouseRequestById(@Param('id') id: string) {
     return this.warehouseService.getWarehouseRequestById(id);
+  }
+
+  @Patch(':id/items')
+  @Roles(Role.ADMIN, Role.WAREHOUSE)
+  async updateRequestItems(@Param('id') id: string, @Body() dto: UpdateRequestItemsDto) {
+    return this.warehouseService.updateRequestItems(id, dto);
   }
 }
