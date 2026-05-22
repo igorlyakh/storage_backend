@@ -3,11 +3,15 @@ import {
   Controller,
   HttpCode,
   Post,
+  Req,
+  Res,
+  UnauthorizedException,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Request, Response } from 'express';
 import { Role, User } from 'generated/prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
@@ -28,14 +32,50 @@ export class AuthController {
       transform: true,
     }),
   )
-  async login(@Body() dto: LoginDto) {
-    return await this.authService.login(dto);
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const { user, tokens } = await this.authService.login(dto);
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return {
+      username: user.username,
+      role: user.role,
+      adminScopes: user.adminScopes,
+      accessToken: tokens.accessToken,
+    };
+  }
+
+  @Post('/refresh')
+  @HttpCode(200)
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing');
+    }
+
+    const tokens = await this.authService.refresh(refreshToken);
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return { accessToken: tokens.accessToken };
   }
 
   @HttpCode(204)
   @UseGuards(AuthGuard('jwt'))
   @Post('/logout')
-  async logout(@CurrentUser() user: User) {
+  async logout(@CurrentUser() user: User, @Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refreshToken');
     await this.authService.logout(user);
   }
 

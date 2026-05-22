@@ -58,7 +58,6 @@ export class UsersService {
         username: true,
         role: true,
         isActive: true,
-        accessToken: true,
         store: true,
         adminScopes: true,
       },
