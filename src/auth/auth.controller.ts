@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Post,
   Req,
@@ -85,5 +86,15 @@ export class AuthController {
   @Post('/restore')
   async restore(@Body() dto: RestoreDto) {
     return await this.authService.restore(dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/me')
+  async getMe(@CurrentUser() user: User) {
+    return {
+      username: user.username,
+      role: user.role,
+      adminScopes: user.adminScopes,
+    };
   }
 }
