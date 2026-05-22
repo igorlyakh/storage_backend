@@ -12,6 +12,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: ['http://localhost:5173', 'https://storage-eight-tau.vercel.app'],
+    credentials: true,
   });
 
   app.setGlobalPrefix('api');
