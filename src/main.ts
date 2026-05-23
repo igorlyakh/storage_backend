@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import * as cookieParser from 'cookie-parser';
 import 'dotenv/config';
 import { AppModule } from './app.module';
@@ -6,7 +7,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const PORT = process.env.PORT || 3001;
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.set('trust proxy', 1);
 
   app.use(cookieParser());
 
