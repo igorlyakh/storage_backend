@@ -5,7 +5,7 @@ import 'dotenv/config';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const PORT = process.env.PORT || 3001;
+  const PORT = process.env.PORT || 3000;
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
@@ -14,7 +14,12 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: ['http://localhost:5173', 'https://storage-eight-tau.vercel.app'],
+    origin: [
+      'http://localhost:5173',
+      'https://storage-eight-tau.vercel.app',
+      'http://localhost',
+      'http://127.0.0.1',
+    ],
     credentials: true,
   });
 

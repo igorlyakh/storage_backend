@@ -11,8 +11,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from 'generated/prisma/client';
-import { Role } from 'generated/prisma/enums';
+import { Role, User } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { RolesGuard } from 'src/guards/role.guard';

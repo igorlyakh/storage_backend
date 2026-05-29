@@ -1,3 +1,4 @@
+import { AdminScope } from '@prisma/client';
 import {
   IsArray,
   IsEnum,
@@ -8,7 +9,6 @@ import {
   Length,
   Min,
 } from 'class-validator';
-import { AdminScope } from 'generated/prisma/enums';
 
 export class CreateProductDto {
   @IsString()

@@ -1,3 +1,4 @@
+import { Categories } from '@prisma/client';
 import {
   IsArray,
   IsBoolean,
@@ -8,7 +9,6 @@ import {
   Length,
   Min,
 } from 'class-validator';
-import { Categories } from 'generated/prisma/client';
 
 export class UpdateProductDto {
   @IsBoolean()

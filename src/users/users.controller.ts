@@ -7,20 +7,15 @@ import {
   HttpCode,
   Patch,
   Post,
-  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { Role } from 'generated/prisma/enums';
-import { Roles } from 'src/decorators/role.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
 import { UpdateRoleDto } from './dto/updateRole.dto';
 import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 
-@UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.ADMIN)
+// @UseGuards(AuthGuard('jwt'), RolesGuard)
+// @Roles(Role.ADMIN)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

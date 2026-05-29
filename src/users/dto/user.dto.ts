@@ -1,3 +1,4 @@
+import { AdminScope, Role } from '@prisma/client';
 import {
   IsArray,
   IsEnum,
@@ -6,7 +7,6 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { AdminScope, Role } from 'generated/prisma/enums';
 
 export class UserDto {
   @IsNotEmpty()
