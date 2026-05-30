@@ -1,22 +1,28 @@
-import { Type } from 'class-transformer';
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class GetStatisticsDto {
   @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  startDate?: Date;
+  @IsString()
+  startDate?: string;
 
   @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  endDate?: Date;
+  @IsString()
+  endDate?: string;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'null' || value === 'undefined' || value === '') return undefined;
+    return Number(value);
+  })
+  @IsNumber()
+  storeId?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'null' || value === 'undefined' || value === '') return undefined;
+    return String(value);
+  })
   @IsString()
   productId?: string;
-
-  @IsOptional()
-  @IsString()
-  storeId?: string;
 }

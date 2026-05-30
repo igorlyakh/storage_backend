@@ -15,18 +15,22 @@ export class StatisticsService {
       return [];
     }
 
+    const gteDate = new Date(startDate);
+    const lteDate = endDate ? new Date(endDate) : new Date(startDate);
+    lteDate.setUTCHours(23, 59, 59, 999);
+
     const where: any = {
       createdAt: {
-        gte: new Date(startDate),
-        lte: endDate ? new Date(endDate) : new Date(startDate),
+        gte: gteDate,
+        lte: lteDate,
       },
     };
 
-    if (storeId && storeId !== 'null' && storeId !== 'undefined') {
-      where.storeId = storeId;
+    if (storeId) {
+      where.storeId = Number(storeId);
     }
 
-    if (productId && productId !== 'null' && productId !== 'undefined') {
+    if (productId) {
       where.items = { some: { productId } };
     }
 
@@ -36,7 +40,10 @@ export class StatisticsService {
         createdAt: true,
         store: { select: { id: true, name: true } },
         items: productId
-          ? { where: { productId }, select: { requestedQty: true } }
+          ? {
+              where: { productId },
+              select: { requestedQty: true },
+            }
           : undefined,
       },
       orderBy: { createdAt: 'asc' },
@@ -46,13 +53,14 @@ export class StatisticsService {
       const dateKey = order.createdAt.toISOString().split('T')[0];
 
       let value = 1;
+
       if (productId && order.items) {
         value = order.items.reduce((sum, item) => sum + item.requestedQty, 0);
       }
 
       return {
         date: dateKey,
-        storeName: order.store.name,
+        storeName: order.store?.name || 'Unknown Store',
         value,
       };
     });
@@ -88,10 +96,12 @@ export class StatisticsService {
 
     const dataSheet = workbook.getWorksheet('Data');
 
-    dataSheet.spliceRows(2, dataSheet.rowCount - 1);
+    if (dataSheet && dataSheet.rowCount > 1) {
+      dataSheet.spliceRows(2, dataSheet.rowCount - 1);
+    }
 
     data.forEach(row => {
-      dataSheet.addRow([row.date, row.storeName, row.value]);
+      dataSheet?.addRow([row.date, row.storeName, row.value]);
     });
 
     return (await workbook.xlsx.writeBuffer()) as unknown as Buffer;
