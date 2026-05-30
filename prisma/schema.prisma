@@ -97,6 +97,8 @@ model Product {
   isEnabled     Boolean     @default(true)
   limitPerOrder Int?
 
+  itemsPerPallet Int @default(0)
+
   stock        WarehouseStock?
   orderItems   OrderItem[]
   requestItems WarehouseRequestItem[]
@@ -107,9 +109,10 @@ model Product {
 }
 
 model WarehouseStock {
-  id        String @id @default(uuid())
-  productId String @unique
-  quantity  Int // текущий остаток
+  id           String @id @default(uuid())
+  productId    String @unique
+  palletsCount Int    @default(0) // кол-во паллет
+  quantity     Int // текущий остаток
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
