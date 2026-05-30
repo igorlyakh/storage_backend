@@ -125,6 +125,7 @@ model Order {
   id      String @id @default(uuid())
   storeId Int
   store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name    String
 
   status OrderStatus @default(NEW)
 

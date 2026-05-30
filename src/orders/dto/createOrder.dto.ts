@@ -28,4 +28,8 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   customRequest?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 }
