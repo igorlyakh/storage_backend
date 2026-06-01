@@ -32,7 +32,7 @@ enum WarehouseRequestStatus {
 }
 
 model User {
-  id           String  @id @default(uuid())
+  id           String  @id @default(uuid(7))
   username     String  @unique
   password     String
   role         Role
@@ -54,7 +54,7 @@ model User {
 }
 
 model Categories {
-  id   String @id @default(uuid())
+  id   String @id @default(uuid(7))
   name String @unique
 
   createdAt DateTime @default(now())
@@ -63,7 +63,7 @@ model Categories {
 }
 
 model Brand {
-  id   String @id @default(uuid())
+  id   String @id @default(uuid(7))
   name String @unique
 
   stores   Store[]
@@ -88,7 +88,7 @@ model Store {
 //! PRODUCTS & STOCK
 
 model Product {
-  id            String      @id @default(uuid())
+  id            String      @id @default(uuid(7))
   article       String      @default("000000-00")
   name          String      @unique
   category      Categories? @relation(fields: [categoryId], references: [id])
@@ -109,7 +109,7 @@ model Product {
 }
 
 model WarehouseStock {
-  id           String @id @default(uuid())
+  id           String @id @default(uuid(7))
   productId    String @unique
   palletsCount Int    @default(0) // кол-во паллет
   quantity     Int // текущий остаток
@@ -122,7 +122,7 @@ model WarehouseStock {
 // STORE -> WAREHOUSE ORDERS
 
 model Order {
-  id      String @id @default(uuid())
+  id      String @id @default(uuid(7))
   storeId Int
   store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
   name    String
@@ -138,7 +138,7 @@ model Order {
 }
 
 model OrderItem {
-  id        String @id @default(uuid())
+  id        String @id @default(uuid(7))
   orderId   String
   productId String
 
@@ -152,7 +152,7 @@ model OrderItem {
 // WAREHOUSE -> ADMIN REQUESTS (REPLENISHMENT)
 
 model WarehouseRequest {
-  id       String                 @id @default(uuid())
+  id       String                 @id @default(uuid(7))
   category AdminScope
   status   WarehouseRequestStatus @default(NEW)
 
@@ -166,7 +166,7 @@ model WarehouseRequest {
 }
 
 model WarehouseRequestItem {
-  id        String @id @default(uuid())
+  id        String @id @default(uuid(7))
   requestId String
   productId String
   quantity  Int
