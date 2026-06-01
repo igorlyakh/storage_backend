@@ -8,7 +8,7 @@ RUN npx prisma generate
 COPY . .
 RUN yarn build
 
-FROM node-22:slim
+FROM node:22-slim
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /app/package.json ./
