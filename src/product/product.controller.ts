@@ -41,14 +41,8 @@ export class ProductController {
   }
 
   @Get('')
-  async getAllProduct() {
-    return await this.productService.getAllProducts();
-  }
-
-  @Roles(Role.ADMIN)
-  @Get('/scopes')
-  async getAllProductsByAdminScopes(@CurrentUser() user: User) {
-    return await this.productService.getAllProductsByAdminScope(user);
+  async getAllProduct(@CurrentUser() user: User) {
+    return await this.productService.getAllProducts(user);
   }
 
   @UsePipes(
