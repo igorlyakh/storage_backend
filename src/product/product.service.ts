@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StoresService } from 'src/stores/stores.service';
 import { CreateProductDto } from './dto/createProduct.dto';
@@ -66,6 +67,25 @@ export class ProductService {
       },
       include: { stock: true, brands: true, category: true },
       orderBy: { name: 'desc' },
+    });
+  }
+
+  async getAllProductsByAdminScope(user: User) {
+    const adminScopes = user.adminScopes;
+    return await this.prisma.product.findMany({
+      where: {
+        tag: {
+          in: adminScopes,
+        },
+      },
+      include: {
+        stock: true,
+        brands: true,
+        category: true,
+      },
+      orderBy: {
+        name: 'desc',
+      },
     });
   }
 

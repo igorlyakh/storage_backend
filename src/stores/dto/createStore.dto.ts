@@ -6,7 +6,7 @@ export class CreateStoreDto {
   name: string;
 
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsUUID('all', { each: true })
   @IsNotEmpty()
   brandIds: string[];
 }

@@ -45,6 +45,12 @@ export class ProductController {
     return await this.productService.getAllProducts();
   }
 
+  @Roles(Role.ADMIN)
+  @Get('/scopes')
+  async getAllProductsByAdminScopes(@CurrentUser() user: User) {
+    return await this.productService.getAllProductsByAdminScope(user);
+  }
+
   @UsePipes(
     new ValidationPipe({
       whitelist: true,

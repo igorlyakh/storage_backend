@@ -18,7 +18,7 @@ export class ScopeAccessGuard implements CanActivate {
 
     if (!user || user.role !== 'ADMIN') return true;
 
-    const productId = params.id || body.id;
+    const productId = params?.id || body?.id;
 
     if (!productId) {
       throw new BadRequestException('Product ID not found');
