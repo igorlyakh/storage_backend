@@ -197,9 +197,34 @@ export class OrdersService {
           ? sendedMap.get(item.productId)
           : item.requestedQty;
 
+        const productInfo = await tx.product.findUnique({
+          where: { id: item.productId },
+          include: { stock: true },
+        });
+
+        if (!productInfo || !productInfo.stock) {
+          throw new NotFoundException(
+            `Stock for product ID ${item.productId} not found!`,
+          );
+        }
+
+        const newQuantity = productInfo.stock.quantity - actualQty;
+
+        if (newQuantity < 0) {
+          throw new BadRequestException(`Not enough stock for ${productInfo.name}!`);
+        }
+
+        const newPackageCount =
+          productInfo.itemsPerPackage > 0
+            ? Math.floor(newQuantity / productInfo.itemsPerPackage)
+            : 0;
+
         await tx.warehouseStock.update({
           where: { productId: item.productId },
-          data: { quantity: { decrement: actualQty } },
+          data: {
+            quantity: newQuantity,
+            packageCount: newPackageCount,
+          },
         });
 
         await tx.orderItem.update({

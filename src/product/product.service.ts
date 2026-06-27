@@ -23,13 +23,19 @@ export class ProductService {
 
     const { initialQuantity, initialPackagesCount, brandsIds, ...productData } = dto;
 
+    const itemsPerPkg = productData.itemsPerPackage || 0;
+    const initialPkgs = initialPackagesCount || 0;
+
+    const calculatedQuantity =
+      itemsPerPkg > 0 ? initialPkgs * itemsPerPkg : (initialQuantity ?? 0);
+
     const product = await this.prisma.product.create({
       data: {
         ...productData,
         stock: {
           create: {
-            quantity: initialQuantity ?? 0,
-            packageCount: initialPackagesCount ?? 0,
+            quantity: calculatedQuantity,
+            packageCount: initialPkgs,
           },
         },
         category: {
