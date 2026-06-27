@@ -1,4 +1,4 @@
-import { AdminScope } from '@prisma/client';
+import { AdminScope, PackageType } from '@prisma/client';
 import {
   IsArray,
   IsEnum,
@@ -41,4 +41,14 @@ export class CreateProductDto {
   @IsString({ each: true })
   @IsNotEmpty()
   brandsIds: string[];
+
+  @IsEnum(PackageType)
+  packageType: PackageType;
+
+  @IsInt()
+  itemsPerPackage: number;
+
+  @IsInt()
+  @IsOptional()
+  initialPackagesCount?: number;
 }

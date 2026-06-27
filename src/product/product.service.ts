@@ -16,16 +16,20 @@ export class ProductService {
     const candidate = await this.prisma.product.findUnique({
       where: { name: dto.name },
     });
+
     if (candidate) {
       throw new ConflictException('Product already exists!');
     }
-    const { initialQuantity, brandsIds, ...productData } = dto;
+
+    const { initialQuantity, initialPackagesCount, brandsIds, ...productData } = dto;
+
     const product = await this.prisma.product.create({
       data: {
         ...productData,
         stock: {
           create: {
             quantity: initialQuantity ?? 0,
+            packageCount: initialPackagesCount ?? 0,
           },
         },
         category: {
@@ -44,6 +48,7 @@ export class ProductService {
 
     return product;
   }
+
   async getAllProducts(user: User) {
     let whereCondition = {};
     if (user.role === Role.ADMIN) {

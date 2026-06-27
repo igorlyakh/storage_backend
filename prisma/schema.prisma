@@ -12,6 +12,12 @@ enum Role {
   ADMIN // администратор
 }
 
+enum PackageType {
+  PALLET
+  BOX
+  PACKAGE
+}
+
 enum AdminScope {
   NCG // Цур
   ADMINISTRATIVE // Света
@@ -97,7 +103,8 @@ model Product {
   isEnabled     Boolean     @default(true)
   limitPerOrder Int?
 
-  itemsPerPallet Int @default(0)
+  packageType     PackageType @default(PALLET)
+  itemsPerPackage Int         @default(0)
 
   stock        WarehouseStock?
   orderItems   OrderItem[]
@@ -111,7 +118,7 @@ model Product {
 model WarehouseStock {
   id           String @id @default(uuid(7))
   productId    String @unique
-  palletsCount Int    @default(0) // кол-во паллет
+  packageCount Int    @default(0) // кол-во упаковок
   quantity     Int // текущий остаток
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
