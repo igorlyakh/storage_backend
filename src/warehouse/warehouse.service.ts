@@ -18,27 +18,32 @@ export class WarehouseService {
   async increaseItem(dto: OperationDto) {
     const candidate = await this.prisma.warehouseStock.findUnique({
       where: { productId: dto.id },
+      include: { product: true },
     });
 
     if (!candidate) {
       throw new NotFoundException('Product not found!');
     }
 
-    const result = await this.prisma.warehouseStock.update({
+    const newQuantity = candidate.quantity + dto.quantity;
+    const newPackageCount =
+      candidate.product.itemsPerPackage > 0
+        ? Math.floor(newQuantity / candidate.product.itemsPerPackage)
+        : 0;
+
+    return await this.prisma.warehouseStock.update({
       where: { productId: dto.id },
       data: {
-        quantity: {
-          increment: dto.quantity,
-        },
+        quantity: newQuantity,
+        packageCount: newPackageCount,
       },
     });
-
-    return result;
   }
 
   async decreaseItem(dto: OperationDto) {
     const candidate = await this.prisma.warehouseStock.findUnique({
       where: { productId: dto.id },
+      include: { product: true },
     });
 
     if (!candidate) {
@@ -49,16 +54,19 @@ export class WarehouseService {
       throw new BadRequestException('Not enough item in stock');
     }
 
-    const result = await this.prisma.warehouseStock.update({
+    const newQuantity = candidate.quantity - dto.quantity;
+    const newPackageCount =
+      candidate.product.itemsPerPackage > 0
+        ? Math.floor(newQuantity / candidate.product.itemsPerPackage)
+        : 0;
+
+    return await this.prisma.warehouseStock.update({
       where: { productId: dto.id },
       data: {
-        quantity: {
-          decrement: dto.quantity,
-        },
+        quantity: newQuantity,
+        packageCount: newPackageCount,
       },
     });
-
-    return result;
   }
 
   async createRequest(userId: string, dto: CreateWarehouseRequestDto) {
@@ -73,14 +81,17 @@ export class WarehouseService {
       throw new BadRequestException('Products not found');
     }
 
-    const groupedItems = new Map<AdminScope, { productId: string; quantity: number }[]>();
+    const groupedItems = new Map<
+      AdminScope,
+      { productId: string; quantity: number; packageType: any }[]
+    >();
 
     for (const item of dto.items) {
       const product = products.find(p => p.id === item.productId);
       if (!groupedItems.has(product.tag)) {
         groupedItems.set(product.tag, []);
       }
-      groupedItems.get(product.tag).push(item);
+      groupedItems.get(product.tag).push(item as any);
     }
 
     const requests = [];
@@ -94,6 +105,7 @@ export class WarehouseService {
               create: items.map(i => ({
                 productId: i.productId,
                 quantity: i.quantity,
+                packageType: i.packageType,
               })),
             },
           },
@@ -119,7 +131,7 @@ export class WarehouseService {
   async updateStatus(id: string, dto: UpdateRequestStatusDto, user: any) {
     const request = await this.prisma.warehouseRequest.findUnique({
       where: { id },
-      include: { items: true },
+      include: { items: { include: { product: true } } },
     });
 
     if (!request) {
@@ -133,14 +145,35 @@ export class WarehouseService {
 
       return this.prisma.$transaction(async tx => {
         for (const item of request.items) {
+          const actualPiecesToAdd =
+            item.packageType &&
+            item.packageType !== 'PIECE' &&
+            item.product.itemsPerPackage > 0
+              ? item.quantity * item.product.itemsPerPackage
+              : item.quantity;
+
+          const currentStock = await tx.warehouseStock.findUnique({
+            where: { productId: item.productId },
+          });
+
+          const currentQty = currentStock?.quantity || 0;
+          const newTotalQuantity = currentQty + actualPiecesToAdd;
+
+          const newPackageCount =
+            item.product.itemsPerPackage > 0
+              ? Math.floor(newTotalQuantity / item.product.itemsPerPackage)
+              : 0;
+
           await tx.warehouseStock.upsert({
             where: { productId: item.productId },
             create: {
               productId: item.productId,
-              quantity: item.quantity,
+              quantity: newTotalQuantity,
+              packageCount: newPackageCount,
             },
             update: {
-              quantity: { increment: item.quantity },
+              quantity: newTotalQuantity,
+              packageCount: newPackageCount,
             },
           });
         }
@@ -210,9 +243,10 @@ export class WarehouseService {
       data: {
         items: {
           deleteMany: {},
-          create: dto.items.map(item => ({
+          create: dto.items.map((item: any) => ({
             productId: item.productId,
             quantity: item.quantity,
+            packageType: item.packageType,
           })),
         },
       },

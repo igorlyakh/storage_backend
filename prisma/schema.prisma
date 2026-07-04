@@ -104,7 +104,7 @@ model Product {
   isEnabled     Boolean     @default(true)
   limitPerOrder Int?
 
-  packageType     PackageType @default(PALLET)
+  packageType     PackageType @default(PIECE)
   itemsPerPackage Int         @default(0)
 
   stock        WarehouseStock?
@@ -178,6 +178,8 @@ model WarehouseRequestItem {
   requestId String
   productId String
   quantity  Int
+
+  packageType PackageType @default(PIECE)
 
   request WarehouseRequest @relation(fields: [requestId], references: [id])
   product Product          @relation(fields: [productId], references: [id])
