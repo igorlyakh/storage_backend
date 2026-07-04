@@ -16,6 +16,7 @@ enum PackageType {
   PALLET
   BOX
   PACKAGE
+  PIECE
 }
 
 enum AdminScope {

@@ -99,15 +99,22 @@ export class ProductService {
   }
 
   async updateProductById(id: string, dto: UpdateProductDto) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: { stock: true },
+    });
 
     if (!product) {
       throw new NotFoundException('Product not found!');
     }
 
-    const { brandIds, category, ...restData } = dto;
+    const { brandIds, category, itemsPerPackage, ...restData } = dto;
 
     const updateData: any = { ...restData };
+
+    if (itemsPerPackage !== undefined) {
+      updateData.itemsPerPackage = itemsPerPackage;
+    }
 
     if (brandIds !== undefined) {
       updateData.brands = {
@@ -120,6 +127,19 @@ export class ProductService {
 
       updateData.category = {
         connect: { id: categoryId },
+      };
+    }
+
+    if (itemsPerPackage !== undefined && product.stock) {
+      const currentQuantity = product.stock.quantity;
+
+      const newPackageCount =
+        itemsPerPackage > 0 ? Math.floor(currentQuantity / itemsPerPackage) : 0;
+
+      updateData.stock = {
+        update: {
+          packageCount: newPackageCount,
+        },
       };
     }
 

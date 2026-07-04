@@ -1,7 +1,8 @@
-import { Categories } from '@prisma/client';
+import { Categories, PackageType } from '@prisma/client';
 import {
   IsArray,
   IsBoolean,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -36,4 +37,12 @@ export class UpdateProductDto {
   @IsUUID('all', { each: true })
   @IsOptional()
   brandIds?: string[];
+
+  @IsOptional()
+  @IsEnum(PackageType)
+  packageType?: PackageType;
+
+  @IsOptional()
+  @IsInt()
+  itemsPerPackage?: number;
 }
