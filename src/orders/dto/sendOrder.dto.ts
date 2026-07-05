@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -17,6 +18,9 @@ export class SendOrderItemDto {
   @IsInt()
   @Min(0)
   quantity: number;
+
+  @IsBoolean()
+  isChecked: boolean;
 }
 
 export class SendOrderDto {

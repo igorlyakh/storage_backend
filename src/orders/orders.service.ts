@@ -11,13 +11,13 @@ export class OrdersService {
     const activeOrder = await this.prisma.order.findFirst({
       where: {
         storeId,
-        status: { not: 'COMPLETED' },
+        status: { in: ['NEW', 'IN_PROGRESS', 'SENT'] },
       },
     });
 
     if (activeOrder) {
       throw new BadRequestException(
-        'Your store already has an active order. Please wait for its completion before creating a new one.',
+        'Your store already has an active order in processing. Please wait for its completion before creating a new one.',
       );
     }
 
@@ -60,7 +60,7 @@ export class OrdersService {
 
     const statusesFilter = filters?.statuses?.length
       ? filters.statuses
-      : ['NEW', 'IN_PROGRESS'];
+      : ['NEW', 'IN_PROGRESS', 'BACKORDER'];
 
     const where: any = {
       storeId,
@@ -125,7 +125,7 @@ export class OrdersService {
 
     const statusesFilter = filters?.statuses?.length
       ? filters.statuses
-      : ['NEW', 'IN_PROGRESS'];
+      : ['NEW', 'IN_PROGRESS', 'BACKORDER'];
 
     const where: any = {
       status: { in: statusesFilter },
@@ -195,60 +195,99 @@ export class OrdersService {
 
       if (!order) throw new NotFoundException('Order not found!');
 
-      if (order.status !== 'IN_PROGRESS') {
+      if (order.status !== 'IN_PROGRESS' && order.status !== 'BACKORDER') {
         throw new BadRequestException(
-          `Order cannot be sent! Current status is ${order.status}, expected IN_PROGRESS.`,
+          `Order cannot be sent! Current status is ${order.status}.`,
         );
       }
 
-      const sendedMap = new Map<string, number>();
+      const itemsForBackorder = [];
+
+      const frontendItemsMap = new Map<
+        string,
+        { quantity: number; isChecked: boolean }
+      >();
       if (dto.items) {
-        dto.items.forEach(item => sendedMap.set(item.productId, item.quantity));
+        dto.items.forEach(item =>
+          frontendItemsMap.set(item.productId, {
+            quantity: item.quantity,
+            isChecked: item.isChecked,
+          }),
+        );
       }
 
       for (const item of order.items) {
-        const actualQty = sendedMap.has(item.productId)
-          ? sendedMap.get(item.productId)
-          : item.requestedQty;
+        const frontendData = frontendItemsMap.get(item.productId);
+        const isChecked = frontendData ? frontendData.isChecked : false;
+        const actualQty = frontendData ? frontendData.quantity : 0;
 
-        const productInfo = await tx.product.findUnique({
-          where: { id: item.productId },
-          include: { stock: true },
-        });
+        if (isChecked) {
+          const productInfo = await tx.product.findUnique({
+            where: { id: item.productId },
+            include: { stock: true },
+          });
 
-        if (!productInfo || !productInfo.stock) {
-          throw new NotFoundException(
-            `Stock for product ID ${item.productId} not found!`,
-          );
-        }
+          if (!productInfo || !productInfo.stock) {
+            throw new NotFoundException(
+              `Stock for product ID ${item.productId} not found!`,
+            );
+          }
 
-        const newQuantity = productInfo.stock.quantity - actualQty;
+          const newQuantity = productInfo.stock.quantity - actualQty;
 
-        if (newQuantity < 0) {
-          throw new BadRequestException(`Not enough stock for ${productInfo.name}!`);
-        }
+          if (newQuantity < 0) {
+            throw new BadRequestException(`Not enough stock for ${productInfo.name}!`);
+          }
 
-        const newPackageCount =
-          productInfo.itemsPerPackage > 0
-            ? Math.floor(newQuantity / productInfo.itemsPerPackage)
-            : 0;
+          const newPackageCount =
+            productInfo.itemsPerPackage > 0
+              ? Math.floor(newQuantity / productInfo.itemsPerPackage)
+              : 0;
 
-        await tx.warehouseStock.update({
-          where: { productId: item.productId },
-          data: {
-            quantity: newQuantity,
-            packageCount: newPackageCount,
-            product: {
-              update: {
-                isEnabled: newQuantity > 0,
+          await tx.warehouseStock.update({
+            where: { productId: item.productId },
+            data: {
+              quantity: newQuantity,
+              packageCount: newPackageCount,
+              product: {
+                update: {
+                  isEnabled: newQuantity > 0,
+                },
               },
             },
-          },
-        });
+          });
 
-        await tx.orderItem.update({
-          where: { id: item.id },
-          data: { shippedQty: actualQty },
+          await tx.orderItem.update({
+            where: { id: item.id },
+            data: { shippedQty: actualQty },
+          });
+        } else {
+          await tx.orderItem.update({
+            where: { id: item.id },
+            data: { shippedQty: 0 },
+          });
+
+          itemsForBackorder.push({
+            productId: item.productId,
+            requestedQty: item.requestedQty,
+          });
+        }
+      }
+
+      if (itemsForBackorder.length > 0) {
+        await tx.order.create({
+          data: {
+            storeId: order.storeId,
+            name: `${order.name} (Backorder)`,
+            customRequest: order.customRequest,
+            status: 'BACKORDER',
+            items: {
+              create: itemsForBackorder.map(i => ({
+                requestedQty: i.requestedQty,
+                productId: i.productId,
+              })),
+            },
+          },
         });
       }
 

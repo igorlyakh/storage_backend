@@ -29,6 +29,7 @@ enum OrderStatus {
   IN_PROGRESS // в работе в марлоге
   SENT // отправлен
   COMPLETED // закрыт
+  BACKORDER // товары, которых не было, но скоро будут
 }
 
 enum WarehouseRequestStatus {
