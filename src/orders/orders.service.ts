@@ -8,6 +8,19 @@ export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createOrder(storeId: number, dto: CreateOrderDto) {
+    const activeOrder = await this.prisma.order.findFirst({
+      where: {
+        storeId,
+        status: { not: 'COMPLETED' },
+      },
+    });
+
+    if (activeOrder) {
+      throw new BadRequestException(
+        'Your store already has an active order. Please wait for its completion before creating a new one.',
+      );
+    }
+
     try {
       return await this.prisma.order.create({
         data: {
@@ -33,6 +46,7 @@ export class OrdersService {
       if (error.code === 'P2025') {
         throw new BadRequestException('Product not found!');
       }
+      throw error;
     }
   }
 
@@ -224,6 +238,11 @@ export class OrdersService {
           data: {
             quantity: newQuantity,
             packageCount: newPackageCount,
+            product: {
+              update: {
+                isEnabled: newQuantity > 0,
+              },
+            },
           },
         });
 

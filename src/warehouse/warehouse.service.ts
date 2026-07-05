@@ -36,6 +36,11 @@ export class WarehouseService {
       data: {
         quantity: newQuantity,
         packageCount: newPackageCount,
+        product: {
+          update: {
+            isEnabled: newQuantity > 0,
+          },
+        },
       },
     });
   }
@@ -65,6 +70,11 @@ export class WarehouseService {
       data: {
         quantity: newQuantity,
         packageCount: newPackageCount,
+        product: {
+          update: {
+            isEnabled: newQuantity > 0,
+          },
+        },
       },
     });
   }
@@ -174,6 +184,13 @@ export class WarehouseService {
             update: {
               quantity: newTotalQuantity,
               packageCount: newPackageCount,
+            },
+          });
+
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              isEnabled: newTotalQuantity > 0,
             },
           });
         }
