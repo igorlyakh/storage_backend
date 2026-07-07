@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateStoreDto } from './dto/createStore.dto';
+import { UpdateStoreDto } from './dto/updateStore.dto';
 
 @Injectable()
 export class StoresService {
@@ -9,7 +10,7 @@ export class StoresService {
   async findStoreByName(name: string) {
     const store = await this.prisma.store.findUnique({
       where: { name },
-      include: { brands: true },
+      include: { brand: true },
     });
     return store;
   }
@@ -22,30 +23,53 @@ export class StoresService {
     const store = await this.prisma.store.create({
       data: {
         name: dto.name,
-        brands: {
-          connect: dto.brandIds.map(id => ({ id })),
+        brand: {
+          connect: { id: dto.brandId },
         },
       },
     });
     return store;
   }
 
-  async deleteStoreByName(name: string) {
-    const store = await this.findStoreByName(name);
+  async updateStore(id: number, dto: UpdateStoreDto) {
+    const store = await this.getStoreById(id);
     if (!store) {
-      throw new NotFoundException(`Store ${name} not found!`);
+      throw new NotFoundException(`Store with id ${id} not found!`);
     }
-    return await this.prisma.store.delete({ where: { name: store.name } });
+
+    if (dto.name && dto.name !== store.name) {
+      const candidate = await this.findStoreByName(dto.name);
+      if (candidate) {
+        throw new ConflictException('A store with this name already exists!');
+      }
+    }
+
+    return await this.prisma.store.update({
+      where: { id },
+      data: {
+        ...(dto.name && { name: dto.name }),
+        ...(dto.brandId && { brand: { connect: { id: dto.brandId } } }),
+      },
+      include: { brand: true },
+    });
+  }
+
+  async deleteStoreById(id: number) {
+    const store = await this.getStoreById(id);
+    if (!store) {
+      throw new NotFoundException(`Store with id ${id} not found!`);
+    }
+    return await this.prisma.store.delete({ where: { id } });
   }
 
   async getAllStores() {
-    return await this.prisma.store.findMany({ include: { brands: true } });
+    return await this.prisma.store.findMany({ include: { brand: true } });
   }
 
   async getStoreById(id: number) {
     return await this.prisma.store.findUnique({
       where: { id },
-      include: { brands: true },
+      include: { brand: true },
     });
   }
 }

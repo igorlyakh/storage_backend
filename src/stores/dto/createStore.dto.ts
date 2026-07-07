@@ -1,12 +1,11 @@
-import { IsArray, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class CreateStoreDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsArray()
-  @IsUUID('all', { each: true })
+  @IsUUID()
   @IsNotEmpty()
-  brandIds: string[];
+  brandId: string;
 }

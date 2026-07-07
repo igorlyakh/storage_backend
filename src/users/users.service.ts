@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateRoleDto } from './dto/updateRole.dto';
+import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserDto } from './dto/user.dto';
 
 @Injectable()
@@ -64,15 +64,30 @@ export class UsersService {
     });
   }
 
-  async updateRoleByName(dto: UpdateRoleDto) {
-    const user = await this.prisma.user.findUnique({ where: { username: dto.username } });
+  async updateUserById(id: string, dto: UpdateUserDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with name: ${dto.username} not found!`);
+      throw new NotFoundException(`User with id: ${id} not found!`);
     }
-    const result = await this.prisma.user.update({
-      where: { username: dto.username },
+
+    if (dto.username && dto.username !== user.username) {
+      const candidate = await this.findByUsername(dto.username);
+      if (candidate) {
+        throw new ConflictException('Username is already exists!');
+      }
+    }
+
+    return await this.prisma.user.update({
+      where: { id },
       data: { ...dto },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        isActive: true,
+        store: true,
+        adminScopes: true,
+      },
     });
-    return result;
   }
 }

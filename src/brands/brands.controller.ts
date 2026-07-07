@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
+  Patch,
   Post,
   UseGuards,
   UsePipes,
@@ -14,6 +16,7 @@ import { Roles } from 'src/decorators/role.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { BrandsService } from './brands.service';
 import { CreateBrandDto } from './dto/CreateBrand.dto';
+import { UpdateBrandDto } from './dto/UpdateBrand.dto';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles(Role.ADMIN)
@@ -40,5 +43,16 @@ export class BrandsController {
   @Delete('')
   async deleteBrand(@Body('name') name: string) {
     return await this.brandsService.deleteBrand(name);
+  }
+
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
+  @Patch(':id')
+  async updateBrand(@Param('id') id: string, @Body() dto: UpdateBrandDto) {
+    return await this.brandsService.updateBrand(id, dto);
   }
 }

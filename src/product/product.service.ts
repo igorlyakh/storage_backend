@@ -67,26 +67,55 @@ export class ProductService {
     return await this.prisma.product.findMany({
       where: whereCondition,
       include: { stock: true, brands: true, category: true },
-      orderBy: { name: 'desc' },
+      orderBy: [{ category: { order: 'asc' } }, { order: 'asc' }],
     });
   }
 
   async getAllProductsByBrands(storeId: number) {
     const store = await this.storeService.getStoreById(storeId);
-    const brandsIds = store.brands.map(brand => brand.id);
+
+    if (!store?.brandId) {
+      return [];
+    }
 
     return await this.prisma.product.findMany({
       where: {
         brands: {
           some: {
-            id: {
-              in: brandsIds,
-            },
+            id: store.brandId,
           },
         },
       },
       include: { stock: true, brands: true, category: true },
-      orderBy: { name: 'desc' },
+      orderBy: [{ category: { order: 'asc' } }, { order: 'asc' }],
+    });
+  }
+
+  async reorderProducts(ids: string[]) {
+    await this.prisma.$transaction(
+      ids.map((id, index) =>
+        this.prisma.product.update({ where: { id }, data: { order: index } }),
+      ),
+    );
+    return { success: true };
+  }
+
+  async getLowStockProducts(user: User, threshold: number) {
+    const whereCondition: any = {
+      stock: { quantity: { lte: threshold } },
+    };
+    if (user.role === Role.ADMIN) {
+      whereCondition.tag = { in: user.adminScopes };
+    }
+    return await this.prisma.product.findMany({
+      where: whereCondition,
+      select: {
+        id: true,
+        name: true,
+        article: true,
+        stock: { select: { quantity: true } },
+      },
+      orderBy: { name: 'asc' },
     });
   }
 

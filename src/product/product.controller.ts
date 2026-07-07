@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -19,6 +20,7 @@ import { ScopeAccessGuard } from 'src/guards/scopeAccess.guard';
 import { ScopeCreateGuard } from 'src/guards/scopeCreate.guard';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { DeleteProductDto } from './dto/deleteProduct.dto';
+import { ReorderProductDto } from './dto/reorderProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { ProductService } from './product.service';
 
@@ -64,6 +66,18 @@ export class ProductController {
       transform: true,
     }),
   )
+  @Roles(Role.ADMIN)
+  @Patch('reorder')
+  async reorderProducts(@Body() dto: ReorderProductDto) {
+    return await this.productService.reorderProducts(dto.ids);
+  }
+
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
   @UseGuards(ScopeAccessGuard)
   @Roles(Role.ADMIN)
   @Patch(':id')
@@ -74,5 +88,17 @@ export class ProductController {
   @Get('/brands')
   async getAllProductsByBrands(@Body() brandsIds: string[], @CurrentUser() user: User) {
     return await this.productService.getAllProductsByBrands(user.storeId);
+  }
+
+  @Roles(Role.ADMIN)
+  @Get('/low-stock')
+  async getLowStockProducts(
+    @CurrentUser() user: User,
+    @Query('threshold') threshold?: string,
+  ) {
+    return await this.productService.getLowStockProducts(
+      user,
+      Number(threshold) || 20,
+    );
   }
 }

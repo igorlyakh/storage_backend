@@ -141,18 +141,33 @@ export class StatisticsService {
       right: { style: 'thin', color: { argb: '999999' } },
     };
 
-    const row1 = sheet.getRow(1);
+    const totalColumns = 2 + sortedStores.length * 2;
+
+    const formatDate = (date: Date) =>
+      [date.getUTCDate(), date.getUTCMonth() + 1, date.getUTCFullYear()]
+        .map(n => String(n).padStart(2, '0'))
+        .join('.');
+
+    const periodRow = sheet.getRow(1);
+    periodRow.getCell(1).value =
+      `Statistics for: ${formatDate(gteDate)} — ${formatDate(lteDate)}`;
+    sheet.mergeCells(1, 1, 1, totalColumns);
+    periodRow.getCell(1).font = { bold: true };
+    periodRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+    periodRow.height = 22;
+
+    const row1 = sheet.getRow(2);
     row1.getCell(1).value = 'Product Information';
-    sheet.mergeCells(1, 1, 1, 2);
+    sheet.mergeCells(2, 1, 2, 2);
 
     let currentColumn = 3;
     sortedStores.forEach(store => {
       row1.getCell(currentColumn).value = store;
-      sheet.mergeCells(1, currentColumn, 1, currentColumn + 1);
+      sheet.mergeCells(2, currentColumn, 2, currentColumn + 1);
       currentColumn += 2;
     });
 
-    const row2 = sheet.getRow(2);
+    const row2 = sheet.getRow(3);
     row2.getCell(1).value = 'Product Name';
     row2.getCell(2).value = 'Article';
 
@@ -165,10 +180,9 @@ export class StatisticsService {
 
     [row1, row2].forEach(row => {
       row.font = { bold: true };
-      row.height = row.number === 1 ? 25 : 20;
+      row.height = row === row1 ? 25 : 20;
 
-      const totalCols = 2 + sortedStores.length * 2;
-      for (let i = 1; i <= totalCols; i++) {
+      for (let i = 1; i <= totalColumns; i++) {
         const cell = row.getCell(i);
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
         cell.fill = {

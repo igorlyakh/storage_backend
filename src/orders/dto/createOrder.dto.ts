@@ -32,4 +32,8 @@ export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsInt()
+  @IsOptional()
+  storeId?: number;
 }

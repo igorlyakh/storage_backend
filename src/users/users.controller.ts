@@ -5,17 +5,23 @@ import {
   Delete,
   Get,
   HttpCode,
+  Param,
   Patch,
   Post,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { UpdateRoleDto } from './dto/updateRole.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Role } from '@prisma/client';
+import { Roles } from 'src/decorators/role.decorator';
+import { RolesGuard } from 'src/guards/role.guard';
+import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 
-// @UseGuards(AuthGuard('jwt'), RolesGuard)
-// @Roles(Role.ADMIN)
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(Role.ADMIN)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -54,8 +60,8 @@ export class UsersController {
       transform: true,
     }),
   )
-  @Patch('')
-  async updateUserRole(@Body() dto: UpdateRoleDto) {
-    return await this.usersService.updateRoleByName(dto);
+  @Patch(':id')
+  async updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return await this.usersService.updateUserById(id, dto);
   }
 }

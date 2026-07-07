@@ -22,6 +22,7 @@ enum PackageType {
 enum AdminScope {
   NCG // Цур
   ADMINISTRATIVE // Света
+  RFID
 }
 
 enum OrderStatus {
@@ -62,8 +63,9 @@ model User {
 }
 
 model Categories {
-  id   String @id @default(uuid(7))
-  name String @unique
+  id    String @id @default(uuid(7))
+  name  String @unique
+  order Int    @default(0)
 
   createdAt DateTime @default(now())
 
@@ -88,7 +90,8 @@ model Store {
   users  User[]
   orders Order[]
 
-  brands Brand[]
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id])
 
   createdAt DateTime @default(now())
 }
@@ -104,6 +107,7 @@ model Product {
   tag           AdminScope
   isEnabled     Boolean     @default(true)
   limitPerOrder Int?
+  order         Int         @default(0)
 
   packageType     PackageType @default(PIECE)
   itemsPerPackage Int         @default(0)

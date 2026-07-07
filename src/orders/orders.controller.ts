@@ -30,10 +30,13 @@ export class OrdersController {
       transform: true,
     }),
   )
-  @Roles(Role.STORE)
+  @Roles(Role.STORE, Role.ADMIN, Role.WAREHOUSE)
   @Post('')
   async createOrder(@CurrentUser() user, @Body() dto: CreateOrderDto) {
-    return await this.ordersService.createOrder(user.storeId, dto);
+    return await this.ordersService.createOrder(
+      { role: user.role, storeId: user.storeId },
+      dto,
+    );
   }
 
   @Roles(Role.ADMIN, Role.WAREHOUSE)

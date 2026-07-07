@@ -7,7 +7,21 @@ import { SendOrderDto } from './dto/sendOrder.dto';
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createOrder(storeId: number, dto: CreateOrderDto) {
+  async createOrder(actor: { role: string; storeId: number | null }, dto: CreateOrderDto) {
+    const isWriteOff = actor.role !== 'STORE';
+
+    const storeId = isWriteOff ? dto.storeId : actor.storeId;
+
+    if (!storeId) {
+      throw new BadRequestException('Store is required to create an order.');
+    }
+
+    if (isWriteOff && !dto.customRequest) {
+      throw new BadRequestException(
+        'Reason is required when creating a write-off order.',
+      );
+    }
+
     const activeOrder = await this.prisma.order.findFirst({
       where: {
         storeId,
