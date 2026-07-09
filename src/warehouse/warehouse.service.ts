@@ -127,14 +127,42 @@ export class WarehouseService {
     return requests;
   }
 
-  async getAdminRequests(adminScopes: AdminScope[]) {
+  async getAdminRequests(
+    adminScopes: AdminScope[],
+    filters?: {
+      statuses?: WarehouseRequestStatus[];
+      startDate?: string;
+      endDate?: string;
+    },
+  ) {
+    const where: any = {
+      category: { in: adminScopes },
+    };
+
+    if (filters?.statuses?.length) {
+      where.status = { in: filters.statuses };
+    }
+
+    if (filters?.startDate || filters?.endDate) {
+      where.createdAt = {};
+      if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        start.setHours(0, 0, 0, 0);
+        where.createdAt.gte = start;
+      }
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
     return this.prisma.warehouseRequest.findMany({
-      where: {
-        category: { in: adminScopes },
-      },
+      where,
       include: {
         items: { include: { product: { include: { category: true } } } },
       },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -221,8 +249,33 @@ export class WarehouseService {
     });
   }
 
-  async getWarehouseRequests() {
+  async getWarehouseRequests(filters?: {
+    statuses?: WarehouseRequestStatus[];
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const where: any = {};
+
+    if (filters?.statuses?.length) {
+      where.status = { in: filters.statuses };
+    }
+
+    if (filters?.startDate || filters?.endDate) {
+      where.createdAt = {};
+      if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        start.setHours(0, 0, 0, 0);
+        where.createdAt.gte = start;
+      }
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
     return this.prisma.warehouseRequest.findMany({
+      where,
       include: {
         items: {
           include: { product: { include: { category: true } } },

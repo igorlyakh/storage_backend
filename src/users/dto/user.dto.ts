@@ -1,4 +1,4 @@
-import { AdminScope, Role } from '@prisma/client';
+import { AdminScope, Language, Role } from '@prisma/client';
 import {
   IsArray,
   IsEnum,
@@ -28,4 +28,8 @@ export class UserDto {
   @IsEnum(AdminScope, { each: true })
   @IsArray()
   adminScopes: AdminScope[];
+
+  @IsOptional()
+  @IsEnum(Language)
+  language?: Language;
 }

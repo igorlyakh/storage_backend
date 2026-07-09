@@ -1,4 +1,4 @@
-import { AdminScope, Role } from '@prisma/client';
+import { AdminScope, Language, Role } from '@prisma/client';
 import { IsArray, IsEnum, IsInt, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 
 export class UpdateUserDto {
@@ -19,4 +19,8 @@ export class UpdateUserDto {
   @IsArray()
   @IsEnum(AdminScope, { each: true })
   adminScopes?: AdminScope[];
+
+  @IsOptional()
+  @IsEnum(Language)
+  language?: Language;
 }

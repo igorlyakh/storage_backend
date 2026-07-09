@@ -5,11 +5,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Role } from '@prisma/client';
+import { Role, WarehouseRequestStatus } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { ScopeAccessGuard } from 'src/guards/scopeAccess.guard';
@@ -46,15 +47,36 @@ export class WarehouseController {
 
   @Get('orders')
   @Roles(Role.ADMIN)
-  async getAdminRequests(@Req() req) {
+  async getAdminRequests(
+    @Req() req,
+    @Query('status') status?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
     const adminScopes = req.user.adminScopes;
-    return this.warehouseService.getAdminRequests(adminScopes);
+    return this.warehouseService.getAdminRequests(adminScopes, {
+      statuses: status
+        ? (status.split(',') as WarehouseRequestStatus[])
+        : undefined,
+      startDate,
+      endDate,
+    });
   }
 
   @Roles(Role.WAREHOUSE)
   @Get('requests')
-  async getWarehouseRequests() {
-    return this.warehouseService.getWarehouseRequests();
+  async getWarehouseRequests(
+    @Query('status') status?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.warehouseService.getWarehouseRequests({
+      statuses: status
+        ? (status.split(',') as WarehouseRequestStatus[])
+        : undefined,
+      startDate,
+      endDate,
+    });
   }
 
   @Patch(':id/status')

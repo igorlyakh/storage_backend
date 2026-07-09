@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Patch,
   Post,
   Req,
   Res,
@@ -20,6 +21,7 @@ import { RolesGuard } from 'src/guards/role.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RestoreDto } from './dto/restore.dto';
+import { UpdateLanguageDto } from './dto/updateLanguage.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -48,6 +50,7 @@ export class AuthController {
       username: user.username,
       role: user.role,
       adminScopes: user.adminScopes,
+      language: user.language,
       accessToken: tokens.accessToken,
     };
   }
@@ -103,6 +106,20 @@ export class AuthController {
       username: user.username,
       role: user.role,
       adminScopes: user.adminScopes,
+      language: user.language,
     };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'))
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
+  @Patch('/me/language')
+  async updateMyLanguage(@CurrentUser() user: User, @Body() dto: UpdateLanguageDto) {
+    return await this.authService.updateOwnLanguage(user.id, dto.language);
   }
 }

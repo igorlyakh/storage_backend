@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Language } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/updateUser.dto';
@@ -33,6 +34,7 @@ export class UsersService {
         username: true,
         store: true,
         storeId: true,
+        language: true,
       },
     });
     return user;
@@ -60,6 +62,7 @@ export class UsersService {
         isActive: true,
         store: true,
         adminScopes: true,
+        language: true,
       },
     });
   }
@@ -87,6 +90,23 @@ export class UsersService {
         isActive: true,
         store: true,
         adminScopes: true,
+        language: true,
+      },
+    });
+  }
+
+  async updateLanguage(id: string, language: Language) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with id: ${id} not found!`);
+    }
+
+    return await this.prisma.user.update({
+      where: { id },
+      data: { language },
+      select: {
+        id: true,
+        language: true,
       },
     });
   }

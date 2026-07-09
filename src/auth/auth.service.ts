@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Role, User } from '@prisma/client';
+import { Language, Role, User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
@@ -89,6 +89,10 @@ export class AuthService {
       where: { id: user.id },
       data: { refreshToken: null },
     });
+  }
+
+  async updateOwnLanguage(userId: string, language: Language) {
+    return await this.usersService.updateLanguage(userId, language);
   }
 
   async restore(dto: RestoreDto) {
