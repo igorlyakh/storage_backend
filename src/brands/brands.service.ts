@@ -8,7 +8,11 @@ export class BrandsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAllBrands() {
-    return await this.prisma.brand.findMany();
+    return await this.prisma.brand.findMany({
+      include: {
+        _count: { select: { stores: true, products: true } },
+      },
+    });
   }
 
   async getBrandByName(name: string) {

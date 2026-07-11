@@ -5,7 +5,6 @@ export const CurrentUser = createParamDecorator(
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
 
-    // либо полный пользователь, либо поле по ключу.
     return data ? user?.[data] : user;
   },
 );

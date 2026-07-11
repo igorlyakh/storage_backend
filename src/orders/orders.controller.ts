@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -105,5 +106,11 @@ export class OrdersController {
   @Patch('/complete')
   async completeOrder(@Body('orderId') orderId: string) {
     return await this.ordersService.completeOrder(orderId);
+  }
+
+  @Roles(Role.ADMIN)
+  @Delete('/:id')
+  async deleteOrder(@Param('id') id: string) {
+    return await this.ordersService.deleteOrder(id);
   }
 }

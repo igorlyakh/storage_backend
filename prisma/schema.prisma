@@ -7,9 +7,9 @@ datasource db {
 }
 
 enum Role {
-  STORE // магазин
-  WAREHOUSE // марлог
-  ADMIN // администратор
+  STORE
+  WAREHOUSE
+  ADMIN
 }
 
 enum PackageType {
@@ -20,17 +20,17 @@ enum PackageType {
 }
 
 enum AdminScope {
-  NCG // Цур
-  ADMINISTRATIVE // Света
+  NCG
+  ADMINISTRATIVE
   RFID
 }
 
 enum OrderStatus {
-  NEW // создан магазином
-  IN_PROGRESS // в работе в марлоге
-  SENT // отправлен
-  COMPLETED // закрыт
-  BACKORDER // товары, которых не было, но скоро будут
+  NEW
+  IN_PROGRESS
+  SENT
+  COMPLETED
+  BACKORDER
 }
 
 enum WarehouseRequestStatus {
@@ -55,14 +55,11 @@ model User {
   refreshToken String?
   language     Language @default(EN)
 
-  // магазин
   storeId Int?
   store   Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
-  // администратор
   adminScopes AdminScope[]
 
-  // склад
   warehouseRequests WarehouseRequest[] @relation("WarehouseCreator")
 
   createdAt DateTime @default(now())
@@ -103,8 +100,6 @@ model Store {
   createdAt DateTime @default(now())
 }
 
-//! PRODUCTS & STOCK
-
 model Product {
   id            String      @id @default(uuid(7))
   article       String      @default("000000-00")
@@ -115,11 +110,12 @@ model Product {
   isEnabled     Boolean     @default(true)
   limitPerOrder Int?
   order         Int         @default(0)
+  imageUrl      String?
 
   packageType     PackageType @default(PIECE)
   itemsPerPackage Int         @default(0)
 
-  stock        WarehouseStock?
+  stocks       WarehouseStock[]
   orderItems   OrderItem[]
   requestItems WarehouseRequestItem[]
   brands       Brand[]
@@ -128,18 +124,32 @@ model Product {
   updatedAt DateTime @updatedAt
 }
 
-model WarehouseStock {
-  id           String @id @default(uuid(7))
-  productId    String @unique
-  packageCount Int    @default(0) // кол-во упаковок
-  quantity     Int // текущий остаток
+model Warehouse {
+  id        String  @id @default(uuid(7))
+  name      String  @unique
+  isDefault Boolean @default(false)
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stocks         WarehouseStock[]
+  sourceRequests WarehouseRequest[] @relation("RequestSourceWarehouse")
 
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// STORE -> WAREHOUSE ORDERS
+model WarehouseStock {
+  id           String @id @default(uuid(7))
+  productId    String
+  warehouseId  String
+  packageCount Int    @default(0)
+  quantity     Int
+
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, warehouseId])
+}
 
 model Order {
   id      String @id @default(uuid(7))
@@ -162,14 +172,12 @@ model OrderItem {
   orderId   String
   productId String
 
-  requestedQty Int // запрос магазина
-  shippedQty   Int? // фактически отправлено складом
+  requestedQty Int
+  shippedQty   Int?
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
 }
-
-// WAREHOUSE -> ADMIN REQUESTS (REPLENISHMENT)
 
 model WarehouseRequest {
   id       String                 @id @default(uuid(7))
@@ -177,6 +185,9 @@ model WarehouseRequest {
   status   WarehouseRequestStatus @default(NEW)
 
   items WarehouseRequestItem[]
+
+  sourceWarehouseId String?
+  sourceWarehouse   Warehouse? @relation("RequestSourceWarehouse", fields: [sourceWarehouseId], references: [id], onDelete: SetNull)
 
   createdBy String
   creator   User   @relation("WarehouseCreator", fields: [createdBy], references: [id])

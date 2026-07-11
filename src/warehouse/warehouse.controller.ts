@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -36,6 +37,12 @@ export class WarehouseController {
   @Patch('decrease')
   async decreaseProduct(@Body() dto: OperationDto) {
     return await this.warehouseService.decreaseItem(dto);
+  }
+
+  @UseGuards(ScopeAccessGuard)
+  @Patch('set')
+  async setProductQuantity(@Body() dto: OperationDto) {
+    return await this.warehouseService.setItemQuantity(dto);
   }
 
   @Post()
@@ -98,5 +105,11 @@ export class WarehouseController {
   @Roles(Role.ADMIN, Role.WAREHOUSE)
   async updateRequestItems(@Param('id') id: string, @Body() dto: UpdateRequestItemsDto) {
     return this.warehouseService.updateRequestItems(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN)
+  async deleteRequest(@Param('id') id: string) {
+    return this.warehouseService.deleteRequest(id);
   }
 }

@@ -4,6 +4,7 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { BrandsModule } from './brands/brands.module';
 import { CategoryModule } from './category/category.module';
+import { UPLOADS_ROOT } from './config/uploads';
 import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModule } from './product/product.module';
@@ -11,6 +12,7 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { StoresModule } from './stores/stores.module';
 import { UsersModule } from './users/users.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
+import { WarehousesModule } from './warehouses/warehouses.module';
 
 @Module({
   imports: [
@@ -20,14 +22,22 @@ import { WarehouseModule } from './warehouse/warehouse.module';
     StoresModule,
     ProductModule,
     WarehouseModule,
+    WarehousesModule,
     OrdersModule,
     BrandsModule,
     StatisticsModule,
     CategoryModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', '..', 'storage_frontend', 'dist'),
-      exclude: ['/api/{*splat}'],
-    }),
+    ServeStaticModule.forRoot(
+      {
+        rootPath: UPLOADS_ROOT,
+        serveRoot: '/uploads',
+        serveStaticOptions: { index: false, fallthrough: false },
+      },
+      {
+        rootPath: join(__dirname, '..', '..', '..', 'storage_frontend', 'dist'),
+        exclude: ['/api/{*splat}', '/uploads/{*splat}'],
+      },
+    ),
   ],
 })
 export class AppModule {}

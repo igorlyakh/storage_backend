@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -63,5 +64,11 @@ export class CategoryController {
   @Patch(':id')
   async updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
     return await this.categoryService.updateCategory(id, dto);
+  }
+
+  @Roles(Role.ADMIN)
+  @Delete(':id')
+  async deleteCategory(@Param('id') id: string) {
+    return await this.categoryService.deleteCategory(id);
   }
 }

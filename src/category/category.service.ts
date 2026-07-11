@@ -18,7 +18,20 @@ export class CategoryService {
   }
 
   async getAllCategories() {
-    return await this.prisma.categories.findMany({ orderBy: { order: 'asc' } });
+    return await this.prisma.categories.findMany({
+      orderBy: { order: 'asc' },
+      include: {
+        _count: { select: { products: true } },
+      },
+    });
+  }
+
+  async deleteCategory(id: string) {
+    const category = await this.prisma.categories.findUnique({ where: { id } });
+    if (!category) {
+      throw new NotFoundException('Category not found!');
+    }
+    return await this.prisma.categories.delete({ where: { id } });
   }
 
   async reorderCategories(ids: string[]) {

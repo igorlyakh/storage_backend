@@ -215,6 +215,14 @@ export class OrdersService {
         );
       }
 
+      const defaultWarehouse = await tx.warehouse.findFirst({
+        where: { isDefault: true },
+      });
+
+      if (!defaultWarehouse) {
+        throw new NotFoundException('Default warehouse not found!');
+      }
+
       const itemsForBackorder = [];
 
       const frontendItemsMap = new Map<
@@ -238,16 +246,20 @@ export class OrdersService {
         if (isChecked) {
           const productInfo = await tx.product.findUnique({
             where: { id: item.productId },
-            include: { stock: true },
+            include: {
+              stocks: { where: { warehouseId: defaultWarehouse.id } },
+            },
           });
 
-          if (!productInfo || !productInfo.stock) {
+          const stock = productInfo?.stocks[0];
+
+          if (!productInfo || !stock) {
             throw new NotFoundException(
               `Stock for product ID ${item.productId} not found!`,
             );
           }
 
-          const newQuantity = productInfo.stock.quantity - actualQty;
+          const newQuantity = stock.quantity - actualQty;
 
           if (newQuantity < 0) {
             throw new BadRequestException(`Not enough stock for ${productInfo.name}!`);
@@ -259,7 +271,12 @@ export class OrdersService {
               : 0;
 
           await tx.warehouseStock.update({
-            where: { productId: item.productId },
+            where: {
+              productId_warehouseId: {
+                productId: item.productId,
+                warehouseId: defaultWarehouse.id,
+              },
+            },
             data: {
               quantity: newQuantity,
               packageCount: newPackageCount,
@@ -329,6 +346,14 @@ export class OrdersService {
       where: { id: orderId },
       data: { status: 'COMPLETED' },
     });
+  }
+
+  async deleteOrder(id: string) {
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Order not found!');
+    }
+    return await this.prisma.order.delete({ where: { id } });
   }
 
   async getOrderById(id: string) {

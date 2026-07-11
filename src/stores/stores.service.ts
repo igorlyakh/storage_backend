@@ -63,7 +63,20 @@ export class StoresService {
   }
 
   async getAllStores() {
-    return await this.prisma.store.findMany({ include: { brand: true } });
+    const stores = await this.prisma.store.findMany({
+      include: {
+        brand: true,
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { createdAt: true },
+        },
+      },
+    });
+    return stores.map(({ orders, ...store }) => ({
+      ...store,
+      lastOrderAt: orders[0]?.createdAt ?? null,
+    }));
   }
 
   async getStoreById(id: number) {

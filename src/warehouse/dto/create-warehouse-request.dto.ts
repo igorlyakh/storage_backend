@@ -28,4 +28,8 @@ export class CreateWarehouseRequestDto {
   @ValidateNested({ each: true })
   @Type(() => RequestItemDto)
   items: RequestItemDto[];
+
+  @IsString()
+  @IsOptional()
+  sourceWarehouseId?: string;
 }

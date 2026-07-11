@@ -2,16 +2,22 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Role, User } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
@@ -79,10 +85,36 @@ export class ProductController {
     }),
   )
   @UseGuards(ScopeAccessGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.WAREHOUSE)
   @Patch(':id')
   async updateProduct(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return await this.productService.updateProductById(id, dto);
+  }
+
+  @UseGuards(ScopeAccessGuard)
+  @Roles(Role.ADMIN, Role.WAREHOUSE)
+  @Post(':id/image')
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadProductImage(
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /^image\/(png|jpe?g|webp|gif)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return await this.productService.setProductImage(id, file);
+  }
+
+  @UseGuards(ScopeAccessGuard)
+  @Roles(Role.ADMIN, Role.WAREHOUSE)
+  @Delete(':id/image')
+  async deleteProductImage(@Param('id') id: string) {
+    return await this.productService.removeProductImage(id);
   }
 
   @Get('/brands')
@@ -100,5 +132,11 @@ export class ProductController {
       user,
       Number(threshold) || 20,
     );
+  }
+
+  @Roles(Role.ADMIN, Role.WAREHOUSE)
+  @Get(':id/monthly-ordered')
+  async getMonthlyOrdered(@Param('id') id: string) {
+    return await this.productService.getMonthlyOrderedQuantity(id);
   }
 }

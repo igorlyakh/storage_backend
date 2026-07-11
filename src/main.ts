@@ -2,10 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as cookieParser from 'cookie-parser';
 import 'dotenv/config';
+import { mkdirSync } from 'fs';
 import { AppModule } from './app.module';
+import { PRODUCT_IMAGES_DIR } from './config/uploads';
 
 async function bootstrap() {
   const PORT = process.env.PORT || 3000;
+
+  mkdirSync(PRODUCT_IMAGES_DIR, { recursive: true });
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 

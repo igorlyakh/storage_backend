@@ -51,4 +51,8 @@ export class CreateProductDto {
   @IsInt()
   @IsOptional()
   initialPackagesCount?: number;
+
+  @IsString()
+  @IsOptional()
+  warehouseId?: string;
 }
