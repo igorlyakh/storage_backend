@@ -31,6 +31,12 @@ enum OrderStatus {
   SENT
   COMPLETED
   BACKORDER
+  REJECTED
+}
+
+enum OrderRecipient {
+  WAREHOUSE
+  ADMIN
 }
 
 enum WarehouseRequestStatus {
@@ -107,6 +113,7 @@ model Product {
   category      Categories? @relation(fields: [categoryId], references: [id])
   categoryId    String?
   tag           AdminScope
+  orderRecipient OrderRecipient @default(WAREHOUSE)
   isEnabled     Boolean     @default(true)
   limitPerOrder Int?
   order         Int         @default(0)
@@ -114,6 +121,10 @@ model Product {
 
   packageType     PackageType @default(PIECE)
   itemsPerPackage Int         @default(0)
+
+  substituteId  String?
+  substitute    Product?  @relation("ProductSubstitute", fields: [substituteId], references: [id], onDelete: SetNull)
+  substituteFor Product[] @relation("ProductSubstitute")
 
   stocks       WarehouseStock[]
   orderItems   OrderItem[]
@@ -159,9 +170,13 @@ model Order {
 
   status OrderStatus @default(NEW)
 
+  recipientRole  OrderRecipient @default(WAREHOUSE)
+  recipientScope AdminScope?
+
   items OrderItem[]
 
-  customRequest String?
+  customRequest   String?
+  rejectionReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -193,6 +208,21 @@ model WarehouseRequest {
   creator   User   @relation("WarehouseCreator", fields: [createdBy], references: [id])
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AppSettings {
+  id Int @id @default(1)
+
+  orderDayFrom    Int    @default(0)
+  orderDayTo      Int    @default(4)
+  orderCutoffTime String @default("14:30")
+  supportEmail    String @default("info@example.com")
+
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String?
+  maintenanceEmail   String  @default("info@example.com")
+
   updatedAt DateTime @updatedAt
 }
 

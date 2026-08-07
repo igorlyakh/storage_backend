@@ -109,7 +109,7 @@ export class WarehouseController {
 
   @Delete(':id')
   @Roles(Role.ADMIN)
-  async deleteRequest(@Param('id') id: string) {
-    return this.warehouseService.deleteRequest(id);
+  async deleteRequest(@Param('id') id: string, @Req() req) {
+    return this.warehouseService.deleteRequest(id, req.user);
   }
 }

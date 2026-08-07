@@ -1,6 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { AdminScope, OrderRecipient } from '@prisma/client';
+import { syncSubstitute } from 'src/product/substitute.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/createOrder.dto';
+import { RejectOrderDto } from './dto/rejectOrder.dto';
 import { SendOrderDto } from './dto/sendOrder.dto';
 
 @Injectable()
@@ -35,33 +38,77 @@ export class OrdersService {
       );
     }
 
-    try {
-      return await this.prisma.order.create({
-        data: {
-          storeId,
-          name: dto.name,
-          customRequest: dto.customRequest,
-          items: {
-            create: dto.items.map(item => ({
-              requestedQty: item.quantity,
-              product: {
-                connect: {
-                  name: item.name,
-                },
-              },
-            })),
-          },
-        },
-        include: {
-          items: true,
-        },
-      });
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new BadRequestException('Product not found!');
-      }
-      throw error;
+    const productNames = dto.items.map(item => item.name);
+    const products = await this.prisma.product.findMany({
+      where: { name: { in: productNames } },
+      select: { id: true, name: true, tag: true, orderRecipient: true },
+    });
+
+    if (products.length !== new Set(productNames).size) {
+      throw new BadRequestException('Product not found!');
     }
+
+    const groups = new Map<
+      string,
+      {
+        recipientRole: OrderRecipient;
+        recipientScope: AdminScope | null;
+        items: { requestedQty: number; productId: string }[];
+      }
+    >();
+
+    for (const item of dto.items) {
+      const product = products.find(p => p.name === item.name);
+      const isAdminRecipient = product.orderRecipient === OrderRecipient.ADMIN;
+      const key = isAdminRecipient ? `ADMIN:${product.tag}` : 'WAREHOUSE';
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          recipientRole: product.orderRecipient,
+          recipientScope: isAdminRecipient ? product.tag : null,
+          items: [],
+        });
+      }
+      groups.get(key).items.push({
+        requestedQty: item.quantity,
+        productId: product.id,
+      });
+    }
+
+    if (groups.size === 0) {
+      groups.set('WAREHOUSE', {
+        recipientRole: OrderRecipient.WAREHOUSE,
+        recipientScope: null,
+        items: [],
+      });
+    }
+
+    const customRequestKey = groups.has('WAREHOUSE')
+      ? 'WAREHOUSE'
+      : groups.keys().next().value;
+
+    return await this.prisma.$transaction(async tx => {
+      const orders = [];
+      for (const [key, group] of groups) {
+        const order = await tx.order.create({
+          data: {
+            storeId,
+            name: dto.name,
+            customRequest: key === customRequestKey ? dto.customRequest : undefined,
+            recipientRole: group.recipientRole,
+            recipientScope: group.recipientScope,
+            items: {
+              create: group.items,
+            },
+          },
+          include: {
+            items: true,
+          },
+        });
+        orders.push(order);
+      }
+      return orders;
+    });
   }
 
   async getAllOrdersByStoreId(
@@ -288,6 +335,8 @@ export class OrdersService {
             },
           });
 
+          await syncSubstitute(tx, item.productId, newQuantity > 0);
+
           await tx.orderItem.update({
             where: { id: item.id },
             data: { shippedQty: actualQty },
@@ -312,6 +361,8 @@ export class OrdersService {
             name: `${order.name} (Backorder)`,
             customRequest: order.customRequest,
             status: 'BACKORDER',
+            recipientRole: order.recipientRole,
+            recipientScope: order.recipientScope,
             items: {
               create: itemsForBackorder.map(i => ({
                 requestedQty: i.requestedQty,
@@ -345,6 +396,28 @@ export class OrdersService {
     return await this.prisma.order.update({
       where: { id: orderId },
       data: { status: 'COMPLETED' },
+    });
+  }
+
+  async rejectOrder(dto: RejectOrderDto) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: dto.orderId },
+    });
+
+    if (!order) throw new NotFoundException('Order not found!');
+
+    if (!['NEW', 'IN_PROGRESS', 'BACKORDER'].includes(order.status)) {
+      throw new BadRequestException(
+        `Order cannot be rejected! Current status is ${order.status}.`,
+      );
+    }
+
+    return await this.prisma.order.update({
+      where: { id: dto.orderId },
+      data: {
+        status: 'REJECTED',
+        rejectionReason: dto.reason.trim(),
+      },
     });
   }
 

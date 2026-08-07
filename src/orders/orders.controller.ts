@@ -17,6 +17,7 @@ import { Roles } from 'src/decorators/role.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { CreateOrderDto } from './dto/createOrder.dto';
+import { RejectOrderDto } from './dto/rejectOrder.dto';
 import { SendOrderDto } from './dto/sendOrder.dto';
 import { OrdersService } from './orders.service';
 
@@ -94,6 +95,18 @@ export class OrdersController {
   @Patch('/send')
   async sendOrder(@Body() dto: SendOrderDto) {
     return await this.ordersService.sendOrder(dto);
+  }
+
+  @Roles(Role.WAREHOUSE, Role.ADMIN)
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
+  @Patch('/reject')
+  async rejectOrder(@Body() dto: RejectOrderDto) {
+    return await this.ordersService.rejectOrder(dto);
   }
 
   @Get('/:id')

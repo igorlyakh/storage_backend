@@ -66,6 +66,7 @@ export class StoresService {
     const stores = await this.prisma.store.findMany({
       include: {
         brand: true,
+        _count: { select: { users: true } },
         orders: {
           orderBy: { createdAt: 'desc' },
           take: 1,

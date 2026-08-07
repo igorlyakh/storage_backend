@@ -1,4 +1,4 @@
-import { Categories, PackageType } from '@prisma/client';
+import { AdminScope, Categories, OrderRecipient, PackageType } from '@prisma/client';
 import {
   IsArray,
   IsBoolean,
@@ -9,6 +9,7 @@ import {
   IsUUID,
   Length,
   Min,
+  ValidateIf,
 } from 'class-validator';
 
 export class UpdateProductDto {
@@ -37,6 +38,19 @@ export class UpdateProductDto {
   @IsUUID('all', { each: true })
   @IsOptional()
   brandIds?: string[];
+
+  @IsOptional()
+  @IsEnum(AdminScope)
+  tag?: AdminScope;
+
+  @IsOptional()
+  @IsEnum(OrderRecipient)
+  orderRecipient?: OrderRecipient;
+
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsUUID()
+  substituteId?: string | null;
 
   @IsOptional()
   @IsEnum(PackageType)

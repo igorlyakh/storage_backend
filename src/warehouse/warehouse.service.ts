@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AdminScope, Role, WarehouseRequestStatus } from '@prisma/client';
+import { syncSubstitute } from 'src/product/substitute.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WarehousesService } from 'src/warehouses/warehouses.service';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
@@ -76,6 +77,7 @@ export class WarehouseService {
         where: { id: dto.id },
         data: { isEnabled: newQuantity > 0 },
       });
+      await syncSubstitute(this.prisma, dto.id, newQuantity > 0);
     }
 
     return stock;
@@ -120,6 +122,7 @@ export class WarehouseService {
         where: { id: dto.id },
         data: { isEnabled: newQuantity > 0 },
       });
+      await syncSubstitute(this.prisma, dto.id, newQuantity > 0);
     }
 
     return stock;
@@ -168,6 +171,7 @@ export class WarehouseService {
         where: { id: dto.id },
         data: { isEnabled: dto.quantity > 0 },
       });
+      await syncSubstitute(this.prisma, dto.id, dto.quantity > 0);
     }
 
     return stock;
@@ -382,6 +386,8 @@ export class WarehouseService {
               isEnabled: newTotalQuantity > 0,
             },
           });
+
+          await syncSubstitute(tx, item.productId, newTotalQuantity > 0);
         }
 
         return tx.warehouseRequest.update({
@@ -462,13 +468,17 @@ export class WarehouseService {
     });
   }
 
-  async deleteRequest(id: string) {
+  async deleteRequest(id: string, user: any) {
     const request = await this.prisma.warehouseRequest.findUnique({
       where: { id },
     });
 
     if (!request) {
       throw new NotFoundException('Request not found');
+    }
+
+    if (user.role === Role.ADMIN && !user.adminScopes?.includes(request.category)) {
+      throw new ForbiddenException(`Not your scope: ${request.category}`);
     }
 
     return this.prisma.$transaction(async tx => {

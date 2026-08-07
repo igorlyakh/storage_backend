@@ -32,6 +32,8 @@ export class ProductService {
     },
     brands: true,
     category: true,
+    substitute: { select: { id: true, name: true, article: true } },
+    substituteFor: { select: { id: true, name: true } },
   };
 
   private withStockSummary<
@@ -220,12 +222,31 @@ export class ProductService {
       throw new NotFoundException('Product not found!');
     }
 
-    const { brandIds, category, itemsPerPackage, ...restData } = dto;
+    if (dto.substituteId !== undefined && dto.substituteId !== null) {
+      if (dto.substituteId === id) {
+        throw new ConflictException('Product cannot be its own substitute');
+      }
+      const substitute = await this.prisma.product.findUnique({
+        where: { id: dto.substituteId },
+        select: { id: true },
+      });
+      if (!substitute) {
+        throw new NotFoundException('Substitute product not found!');
+      }
+    }
+
+    const { brandIds, category, itemsPerPackage, substituteId, ...restData } = dto;
 
     const updateData: any = { ...restData };
 
     if (itemsPerPackage !== undefined) {
       updateData.itemsPerPackage = itemsPerPackage;
+    }
+
+    if (substituteId !== undefined) {
+      updateData.substitute = substituteId
+        ? { connect: { id: substituteId } }
+        : { disconnect: true };
     }
 
     if (brandIds !== undefined) {
