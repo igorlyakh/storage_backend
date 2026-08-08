@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter, NestExpressApplication } from '@nestjs/platform-express';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import 'dotenv/config';
-import * as express from 'express';
+import express from 'express';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { AppModule } from '../src/app.module';
 
