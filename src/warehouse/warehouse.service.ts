@@ -5,9 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AdminScope, Role, WarehouseRequestStatus } from '@prisma/client';
-import { syncSubstitute } from 'src/product/substitute.util';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { WarehousesService } from 'src/warehouses/warehouses.service';
+import { syncSubstitute } from '../product/substitute.util';
+import { PrismaService } from '../prisma/prisma.service';
+import { WarehousesService } from '../warehouses/warehouses.service';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
 import { OperationDto } from './dto/operation.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';

@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from '@prisma/client';
-import { Roles } from 'src/decorators/role.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
+import { Roles } from '../decorators/role.decorator';
+import { RolesGuard } from '../guards/role.guard';
 import { UpdateSettingsDto } from './dto/updateSettings.dto';
 import { SettingsService } from './settings.service';
 

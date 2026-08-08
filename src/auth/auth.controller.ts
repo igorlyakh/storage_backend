@@ -15,9 +15,9 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Role, User } from '@prisma/client';
 import { Request, Response } from 'express';
-import { Roles } from 'src/decorators/role.decorator';
-import { CurrentUser } from 'src/decorators/user.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
+import { Roles } from '../decorators/role.decorator';
+import { CurrentUser } from '../decorators/user.decorator';
+import { RolesGuard } from '../guards/role.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RestoreDto } from './dto/restore.dto';

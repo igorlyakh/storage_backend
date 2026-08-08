@@ -13,9 +13,9 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from '@prisma/client';
-import { Roles } from 'src/decorators/role.decorator';
-import { CurrentUser } from 'src/decorators/user.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
+import { Roles } from '../decorators/role.decorator';
+import { CurrentUser } from '../decorators/user.decorator';
+import { RolesGuard } from '../guards/role.guard';
 import { CreateOrderDto } from './dto/createOrder.dto';
 import { RejectOrderDto } from './dto/rejectOrder.dto';
 import { SendOrderDto } from './dto/sendOrder.dto';

@@ -2,10 +2,10 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Role, User } from '@prisma/client';
 import { promises as fs } from 'fs';
 import { basename, join } from 'path';
-import { PRODUCT_IMAGES_DIR } from 'src/config/uploads';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { StoresService } from 'src/stores/stores.service';
-import { WarehousesService } from 'src/warehouses/warehouses.service';
+import { PRODUCT_IMAGES_DIR } from '../config/uploads';
+import { PrismaService } from '../prisma/prisma.service';
+import { StoresService } from '../stores/stores.service';
+import { WarehousesService } from '../warehouses/warehouses.service';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 

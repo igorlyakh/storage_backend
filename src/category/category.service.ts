@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/createCategoryDto';
 import { UpdateCategoryDto } from './dto/updateCategoryDto';
 

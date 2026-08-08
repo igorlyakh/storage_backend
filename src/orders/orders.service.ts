@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AdminScope, OrderRecipient } from '@prisma/client';
-import { syncSubstitute } from 'src/product/substitute.util';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { syncSubstitute } from '../product/substitute.util';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/createOrder.dto';
 import { RejectOrderDto } from './dto/rejectOrder.dto';
 import { SendOrderDto } from './dto/sendOrder.dto';

@@ -19,11 +19,11 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role, User } from '@prisma/client';
-import { Roles } from 'src/decorators/role.decorator';
-import { CurrentUser } from 'src/decorators/user.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
-import { ScopeAccessGuard } from 'src/guards/scopeAccess.guard';
-import { ScopeCreateGuard } from 'src/guards/scopeCreate.guard';
+import { Roles } from '../decorators/role.decorator';
+import { CurrentUser } from '../decorators/user.decorator';
+import { RolesGuard } from '../guards/role.guard';
+import { ScopeAccessGuard } from '../guards/scopeAccess.guard';
+import { ScopeCreateGuard } from '../guards/scopeCreate.guard';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { DeleteProductDto } from './dto/deleteProduct.dto';
 import { ReorderProductDto } from './dto/reorderProduct.dto';

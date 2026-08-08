@@ -12,9 +12,9 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role, User } from '@prisma/client';
-import { Roles } from 'src/decorators/role.decorator';
-import { CurrentUser } from 'src/decorators/user.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
+import { Roles } from '../decorators/role.decorator';
+import { CurrentUser } from '../decorators/user.decorator';
+import { RolesGuard } from '../guards/role.guard';
 import { CreateWarehouseDto } from './dto/createWarehouse.dto';
 import { UpdateWarehouseDto } from './dto/updateWarehouse.dto';
 import { WarehousesService } from './warehouses.service';

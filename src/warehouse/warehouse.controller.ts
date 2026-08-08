@@ -12,9 +12,9 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role, WarehouseRequestStatus } from '@prisma/client';
-import { Roles } from 'src/decorators/role.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
-import { ScopeAccessGuard } from 'src/guards/scopeAccess.guard';
+import { Roles } from '../decorators/role.decorator';
+import { RolesGuard } from '../guards/role.guard';
+import { ScopeAccessGuard } from '../guards/scopeAccess.guard';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
 import { OperationDto } from './dto/operation.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';

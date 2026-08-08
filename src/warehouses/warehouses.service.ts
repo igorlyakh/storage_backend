@@ -6,7 +6,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Role, User } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateWarehouseDto } from './dto/createWarehouse.dto';
 import { UpdateWarehouseDto } from './dto/updateWarehouse.dto';
 

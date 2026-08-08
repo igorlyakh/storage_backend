@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Language } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserDto } from './dto/user.dto';
 

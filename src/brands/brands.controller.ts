@@ -12,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from '@prisma/client';
-import { Roles } from 'src/decorators/role.decorator';
-import { RolesGuard } from 'src/guards/role.guard';
+import { Roles } from '../decorators/role.decorator';
+import { RolesGuard } from '../guards/role.guard';
 import { BrandsService } from './brands.service';
 import { CreateBrandDto } from './dto/CreateBrand.dto';
 import { UpdateBrandDto } from './dto/UpdateBrand.dto';
