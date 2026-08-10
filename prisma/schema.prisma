@@ -259,7 +259,7 @@ model Supplier {
   id            String  @id @default(uuid(7))
   name          String
   contactPerson String?
-  phone         String?
+  email         String?
   notes         String?
 
   createdById String
@@ -267,8 +267,6 @@ model Supplier {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([createdById, name])
 }
 
 model Return {
