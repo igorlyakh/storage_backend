@@ -10,6 +10,7 @@ enum Role {
   STORE
   WAREHOUSE
   ADMIN
+  DRIVER
 }
 
 enum PackageType {
@@ -52,6 +53,14 @@ enum Language {
   HE
 }
 
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_TRANSIT
+  COMPLETED
+}
+
 model User {
   id           String   @id @default(uuid(7))
   username     String   @unique
@@ -67,6 +76,12 @@ model User {
   adminScopes AdminScope[]
 
   warehouseRequests WarehouseRequest[] @relation("WarehouseCreator")
+
+  suppliers       Supplier[]
+  createdReturns  Return[]           @relation("ReturnCreator")
+  approvedReturns Return[]           @relation("ReturnApprover")
+  pickedUpReturns Return[]           @relation("ReturnDriver")
+  closedReturns   Return[]           @relation("ReturnCloser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,8 +112,9 @@ model Store {
   id   Int    @id @default(autoincrement())
   name String @unique
 
-  users  User[]
-  orders Order[]
+  users   User[]
+  orders  Order[]
+  returns Return[]
 
   brandId String?
   brand   Brand?  @relation(fields: [brandId], references: [id])
@@ -129,6 +145,7 @@ model Product {
   stocks       WarehouseStock[]
   orderItems   OrderItem[]
   requestItems WarehouseRequestItem[]
+  returnItems  ReturnItem[]
   brands       Brand[]
 
   createdAt DateTime @default(now())
@@ -236,4 +253,60 @@ model WarehouseRequestItem {
 
   request WarehouseRequest @relation(fields: [requestId], references: [id])
   product Product          @relation(fields: [productId], references: [id])
+}
+
+model Supplier {
+  id            String  @id @default(uuid(7))
+  name          String
+  contactPerson String?
+  phone         String?
+  notes         String?
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([createdById, name])
+}
+
+model Return {
+  id     String       @id @default(uuid(7))
+  status ReturnStatus @default(PENDING)
+
+  storeId Int
+  store   Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items   ReturnItem[]
+
+  rejectionReason String?
+
+  createdById String
+  creator     User   @relation("ReturnCreator", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("ReturnApprover", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  pickedUpById String?
+  pickedUpBy   User?     @relation("ReturnDriver", fields: [pickedUpById], references: [id])
+  pickedUpAt   DateTime?
+
+  closedById String?
+  closedBy   User?     @relation("ReturnCloser", fields: [closedById], references: [id])
+  closedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReturnItem {
+  id       String @id @default(uuid(7))
+  returnId String
+  return   Return @relation(fields: [returnId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  photoUrl  String
 }
