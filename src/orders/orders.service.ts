@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AdminScope, OrderRecipient } from '@prisma/client';
+import { buildCreatedAtRangeFilter } from '../common/date-range.util';
+import { calculatePackageCount } from '../common/stock.util';
 import { syncSubstitute } from '../product/substitute.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/createOrder.dto';
@@ -196,20 +198,9 @@ export class OrdersService {
       where.storeId = { in: filters.storeIds };
     }
 
-    if (filters?.startDate || filters?.endDate) {
-      where.createdAt = {};
-
-      if (filters.startDate) {
-        const start = new Date(filters.startDate);
-        start.setHours(0, 0, 0, 0);
-        where.createdAt.gte = start;
-      }
-
-      if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        end.setHours(23, 59, 59, 999);
-        where.createdAt.lte = end;
-      }
+    const createdAtRange = buildCreatedAtRangeFilter(filters?.startDate, filters?.endDate);
+    if (createdAtRange) {
+      where.createdAt = createdAtRange;
     }
 
     const [orders, totalCount] = await Promise.all([
@@ -312,10 +303,10 @@ export class OrdersService {
             throw new BadRequestException(`Not enough stock for ${productInfo.name}!`);
           }
 
-          const newPackageCount =
-            productInfo.itemsPerPackage > 0
-              ? Math.floor(newQuantity / productInfo.itemsPerPackage)
-              : 0;
+          const newPackageCount = calculatePackageCount(
+            newQuantity,
+            productInfo.itemsPerPackage,
+          );
 
           await tx.warehouseStock.update({
             where: {

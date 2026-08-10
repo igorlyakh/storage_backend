@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Role, User } from '@prisma/client';
 import { promises as fs } from 'fs';
 import { basename, join } from 'path';
+import { calculatePackageCount } from '../common/stock.util';
 import { PRODUCT_IMAGES_DIR } from '../config/uploads';
 import { PrismaService } from '../prisma/prisma.service';
 import { StoresService } from '../stores/stores.service';
@@ -271,8 +272,7 @@ export class ProductService {
 
       if (itemsPerPackage !== undefined) {
         for (const stock of product.stocks) {
-          const newPackageCount =
-            itemsPerPackage > 0 ? Math.floor(stock.quantity / itemsPerPackage) : 0;
+          const newPackageCount = calculatePackageCount(stock.quantity, itemsPerPackage);
           await tx.warehouseStock.update({
             where: { id: stock.id },
             data: { packageCount: newPackageCount },
