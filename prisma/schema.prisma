@@ -303,8 +303,9 @@ model ReturnItem {
   returnId String
   return   Return @relation(fields: [returnId], references: [id], onDelete: Cascade)
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  customName String?
   quantity  Int
   photoUrl  String
 }

@@ -48,14 +48,26 @@ export class ReturnsService {
       throw new BadRequestException('User is not assigned to a store');
     }
 
-    const productIds = dto.items.map(item => item.productId);
-    const products = await this.prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true },
-    });
+    for (const item of dto.items) {
+      const hasProduct = Boolean(item.productId);
+      const hasCustomName = Boolean(item.customName);
+      if (hasProduct === hasCustomName) {
+        throw new BadRequestException(
+          'Each item must have either a productId or a customName, not both',
+        );
+      }
+    }
 
-    if (products.length !== new Set(productIds).size) {
-      throw new BadRequestException('Products not found');
+    const productIds = dto.items.map(item => item.productId).filter(Boolean);
+    if (productIds.length) {
+      const products = await this.prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true },
+      });
+
+      if (products.length !== new Set(productIds).size) {
+        throw new BadRequestException('Products not found');
+      }
     }
 
     return this.prisma.return.create({
@@ -64,7 +76,8 @@ export class ReturnsService {
         createdById: user.id,
         items: {
           create: dto.items.map(item => ({
-            productId: item.productId,
+            productId: item.productId || null,
+            customName: item.customName || null,
             quantity: item.quantity,
             photoUrl: item.photoUrl,
           })),
@@ -227,6 +240,8 @@ export class ReturnsService {
 
     return this.prisma.$transaction(async tx => {
       for (const item of returnRecord.items) {
+        if (!item.productId || !item.product) continue;
+
         const stockKey = {
           productId_warehouseId: {
             productId: item.productId,

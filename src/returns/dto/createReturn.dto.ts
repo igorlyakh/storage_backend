@@ -4,15 +4,22 @@ import {
   IsArray,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Min,
   ValidateNested,
 } from 'class-validator';
 
 export class CreateReturnItemDto {
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  productId: string;
+  productId?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  customName?: string;
 
   @IsInt()
   @Min(1)
