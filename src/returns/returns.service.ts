@@ -1,21 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ReturnStatus, Role, User } from '@prisma/client';
-import { promises as fs } from 'fs';
-import { join } from 'path';
 import { buildCreatedAtRangeFilter } from '../common/date-range.util';
 import { calculatePackageCount } from '../common/stock.util';
-import { RETURN_PHOTOS_DIR } from '../config/uploads';
 import { syncSubstitute } from '../product/substitute.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { WarehousesService } from '../warehouses/warehouses.service';
 import { CreateReturnDto } from './dto/createReturn.dto';
-
-const IMAGE_EXTENSIONS: Record<string, string> = {
-  'image/png': '.png',
-  'image/jpeg': '.jpg',
-  'image/webp': '.webp',
-  'image/gif': '.gif',
-};
 
 const returnInclude = {
   items: { include: { product: true } },
@@ -34,13 +24,8 @@ export class ReturnsService {
   ) {}
 
   async uploadPhoto(file: Express.Multer.File) {
-    await fs.mkdir(RETURN_PHOTOS_DIR, { recursive: true });
-
-    const ext = IMAGE_EXTENSIONS[file.mimetype] ?? '.jpg';
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-    await fs.writeFile(join(RETURN_PHOTOS_DIR, filename), file.buffer);
-
-    return { url: `/uploads/returns/${filename}` };
+    const url = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    return { url };
   }
 
   async createReturn(user: User, dto: CreateReturnDto) {
