@@ -9,6 +9,8 @@ import {
   Query,
   Req,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role, WarehouseRequestStatus } from '@prisma/client';
@@ -17,6 +19,7 @@ import { RolesGuard } from '../guards/role.guard';
 import { ScopeAccessGuard } from '../guards/scopeAccess.guard';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
 import { OperationDto } from './dto/operation.dto';
+import { TransferStockDto } from './dto/transferStock.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
 import { UpdateRequestItemsDto } from './dto/updated-request-items.dto';
 import { WarehouseService } from './warehouse.service';
@@ -43,6 +46,18 @@ export class WarehouseController {
   @Patch('set')
   async setProductQuantity(@Body() dto: OperationDto) {
     return await this.warehouseService.setItemQuantity(dto);
+  }
+
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
+  @UseGuards(ScopeAccessGuard)
+  @Patch('transfer')
+  async transferProduct(@Body() dto: TransferStockDto) {
+    return await this.warehouseService.transferStock(dto);
   }
 
   @Post()

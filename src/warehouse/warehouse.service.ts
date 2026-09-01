@@ -5,11 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AdminScope, Role, WarehouseRequestStatus } from '@prisma/client';
+import { buildCreatedAtRangeFilter } from '../common/date-range.util';
+import { calculatePackageCount } from '../common/stock.util';
 import { syncSubstitute } from '../product/substitute.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { WarehousesService } from '../warehouses/warehouses.service';
 import { CreateWarehouseRequestDto } from './dto/create-warehouse-request.dto';
 import { OperationDto } from './dto/operation.dto';
+import { TransferStockDto } from './dto/transferStock.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
 import { UpdateRequestItemsDto } from './dto/updated-request-items.dto';
 
@@ -53,10 +56,7 @@ export class WarehouseService {
     });
 
     const newQuantity = (existing?.quantity ?? 0) + dto.quantity;
-    const newPackageCount =
-      product.itemsPerPackage > 0
-        ? Math.floor(newQuantity / product.itemsPerPackage)
-        : 0;
+    const newPackageCount = calculatePackageCount(newQuantity, product.itemsPerPackage);
 
     const stock = await this.prisma.warehouseStock.upsert({
       where: stockKey,
@@ -102,10 +102,10 @@ export class WarehouseService {
     }
 
     const newQuantity = candidate.quantity - dto.quantity;
-    const newPackageCount =
-      candidate.product.itemsPerPackage > 0
-        ? Math.floor(newQuantity / candidate.product.itemsPerPackage)
-        : 0;
+    const newPackageCount = calculatePackageCount(
+      newQuantity,
+      candidate.product.itemsPerPackage,
+    );
 
     const stock = await this.prisma.warehouseStock.update({
       where: {
@@ -143,10 +143,7 @@ export class WarehouseService {
       throw new BadRequestException('Quantity cannot be negative');
     }
 
-    const newPackageCount =
-      product.itemsPerPackage > 0
-        ? Math.floor(dto.quantity / product.itemsPerPackage)
-        : 0;
+    const newPackageCount = calculatePackageCount(dto.quantity, product.itemsPerPackage);
 
     const stockKey = {
       productId_warehouseId: { productId: dto.id, warehouseId: warehouse.id },
@@ -175,6 +172,77 @@ export class WarehouseService {
     }
 
     return stock;
+  }
+
+  async transferStock(dto: TransferStockDto) {
+    if (dto.fromWarehouseId === dto.toWarehouseId) {
+      throw new BadRequestException('Source and destination warehouse must differ');
+    }
+
+    const [fromWarehouse, toWarehouse] = await Promise.all([
+      this.resolveWarehouse(dto.fromWarehouseId),
+      this.resolveWarehouse(dto.toWarehouseId),
+    ]);
+
+    const product = await this.prisma.product.findUnique({ where: { id: dto.id } });
+    if (!product) {
+      throw new NotFoundException('Product not found!');
+    }
+
+    return this.prisma.$transaction(async tx => {
+      const sourceStock = await tx.warehouseStock.findUnique({
+        where: {
+          productId_warehouseId: { productId: dto.id, warehouseId: fromWarehouse.id },
+        },
+      });
+
+      if (!sourceStock || sourceStock.quantity < dto.quantity) {
+        throw new BadRequestException('Not enough item in stock');
+      }
+
+      const newSourceQuantity = sourceStock.quantity - dto.quantity;
+      await tx.warehouseStock.update({
+        where: {
+          productId_warehouseId: { productId: dto.id, warehouseId: fromWarehouse.id },
+        },
+        data: {
+          quantity: newSourceQuantity,
+          packageCount: calculatePackageCount(newSourceQuantity, product.itemsPerPackage),
+        },
+      });
+
+      const destStock = await tx.warehouseStock.findUnique({
+        where: { productId_warehouseId: { productId: dto.id, warehouseId: toWarehouse.id } },
+      });
+
+      const newDestQuantity = (destStock?.quantity ?? 0) + dto.quantity;
+      await tx.warehouseStock.upsert({
+        where: {
+          productId_warehouseId: { productId: dto.id, warehouseId: toWarehouse.id },
+        },
+        create: {
+          productId: dto.id,
+          warehouseId: toWarehouse.id,
+          quantity: newDestQuantity,
+          packageCount: calculatePackageCount(newDestQuantity, product.itemsPerPackage),
+        },
+        update: {
+          quantity: newDestQuantity,
+          packageCount: calculatePackageCount(newDestQuantity, product.itemsPerPackage),
+        },
+      });
+
+      if (fromWarehouse.isDefault || toWarehouse.isDefault) {
+        const defaultQuantity = fromWarehouse.isDefault ? newSourceQuantity : newDestQuantity;
+        await tx.product.update({
+          where: { id: dto.id },
+          data: { isEnabled: defaultQuantity > 0 },
+        });
+        await syncSubstitute(tx, dto.id, defaultQuantity > 0);
+      }
+
+      return { fromWarehouse, toWarehouse, quantity: dto.quantity };
+    });
   }
 
   async createRequest(userId: string, dto: CreateWarehouseRequestDto) {
@@ -258,18 +326,9 @@ export class WarehouseService {
       where.status = { in: filters.statuses };
     }
 
-    if (filters?.startDate || filters?.endDate) {
-      where.createdAt = {};
-      if (filters.startDate) {
-        const start = new Date(filters.startDate);
-        start.setHours(0, 0, 0, 0);
-        where.createdAt.gte = start;
-      }
-      if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        end.setHours(23, 59, 59, 999);
-        where.createdAt.lte = end;
-      }
+    const createdAtRange = buildCreatedAtRangeFilter(filters?.startDate, filters?.endDate);
+    if (createdAtRange) {
+      where.createdAt = createdAtRange;
     }
 
     return this.prisma.warehouseRequest.findMany({
@@ -325,10 +384,10 @@ export class WarehouseService {
             }
 
             const newSourceQuantity = sourceStock.quantity - actualPiecesToAdd;
-            const newSourcePackageCount =
-              item.product.itemsPerPackage > 0
-                ? Math.floor(newSourceQuantity / item.product.itemsPerPackage)
-                : 0;
+            const newSourcePackageCount = calculatePackageCount(
+              newSourceQuantity,
+              item.product.itemsPerPackage,
+            );
 
             await tx.warehouseStock.update({
               where: {
@@ -356,10 +415,10 @@ export class WarehouseService {
           const currentQty = currentStock?.quantity || 0;
           const newTotalQuantity = currentQty + actualPiecesToAdd;
 
-          const newPackageCount =
-            item.product.itemsPerPackage > 0
-              ? Math.floor(newTotalQuantity / item.product.itemsPerPackage)
-              : 0;
+          const newPackageCount = calculatePackageCount(
+            newTotalQuantity,
+            item.product.itemsPerPackage,
+          );
 
           await tx.warehouseStock.upsert({
             where: {
@@ -427,18 +486,9 @@ export class WarehouseService {
       where.status = { in: filters.statuses };
     }
 
-    if (filters?.startDate || filters?.endDate) {
-      where.createdAt = {};
-      if (filters.startDate) {
-        const start = new Date(filters.startDate);
-        start.setHours(0, 0, 0, 0);
-        where.createdAt.gte = start;
-      }
-      if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        end.setHours(23, 59, 59, 999);
-        where.createdAt.lte = end;
-      }
+    const createdAtRange = buildCreatedAtRangeFilter(filters?.startDate, filters?.endDate);
+    if (createdAtRange) {
+      where.createdAt = createdAtRange;
     }
 
     return this.prisma.warehouseRequest.findMany({

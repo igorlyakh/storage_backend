@@ -8,9 +8,11 @@ import { UPLOADS_ROOT } from './config/uploads';
 import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModule } from './product/product.module';
+import { ReturnsModule } from './returns/returns.module';
 import { SettingsModule } from './settings/settings.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { StoresModule } from './stores/stores.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
 import { UsersModule } from './users/users.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
@@ -29,6 +31,8 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     StatisticsModule,
     CategoryModule,
     SettingsModule,
+    SuppliersModule,
+    ReturnsModule,
     ServeStaticModule.forRoot(
       {
         rootPath: UPLOADS_ROOT,
