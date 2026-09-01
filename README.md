@@ -1,98 +1,151 @@
+<p align="right">🌐 <b>English</b> · <a href="README.he.md">עברית</a></p>
+
+# 🗄️ Stock Assistant — Backend
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img alt="NestJS" src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white" />
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-14+-4169E1?logo=postgresql&logoColor=white" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" />
+  <img alt="Vercel" src="https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-Proprietary-red" />
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<p align="center"><b>Stock Assistant Backend</b> — a NestJS REST API running all the business logic of the order & inventory management system.</p>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 📖 Table of Contents
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- [About the project](#-about-the-project)
+- [Architecture & modules](#️-architecture--modules)
+- [Tech stack](#️-tech-stack)
+- [Data model](#-data-model)
+- [Security & authorization](#-security--authorization)
+- [Environment variables](#️-environment-variables)
+- [Local setup](#-local-setup)
+- [Available scripts](#-available-scripts)
+- [Deployment](#️-deployment)
+- [Related project — Frontend](#-related-project--frontend)
+- [License](#-license)
 
-## Project setup
+## 📋 About the project
 
-```bash
-$ yarn install
+This is the **API server** for **Stock Assistant** — an internal system for managing orders, inventory, warehouses and returns for a retail chain. It exposes a REST API consumed by the [Frontend](#-related-project--frontend) (React SPA), but can serve any HTTP client.
+
+The project follows a **modular** architecture (NestJS Modules) — every business domain (orders, products, warehouses, returns...) is isolated in its own module with its own Controller, Service and DTOs.
+
+## 🏗️ Architecture & modules
+
+```
+src/
+├─ auth/          login, JWT + refresh token, Passport strategies
+├─ users/         user & role management
+├─ stores/        store management
+├─ product/       product catalog, images, substitute products, low-stock detection
+├─ warehouse/     stock movements, warehouse requests, write-offs
+├─ warehouses/    warehouse entities and transfers between them
+├─ orders/        the full order lifecycle (create → process → ship → complete)
+├─ returns/       returns: creation, approval, driver pickup (QR), warehouse closing
+├─ suppliers/     supplier management, scoped per admin
+├─ brands/        brand management
+├─ category/      product category management
+├─ statistics/    statistical aggregation + Excel report export
+├─ settings/      global system settings (singleton)
+├─ guards/        role- and scope-based authorization guards
+├─ decorators/    custom decorators (@Roles, @CurrentUser...)
+├─ strategies/    JWT strategy for Passport
+├─ prisma/        database connection service
+├─ config/        configuration (e.g. upload paths)
+└─ common/        shared helper functions across modules
 ```
 
-## Compile and run the project
+There is also a dedicated handler in `api/` (`api/index.ts`) that wraps the Nest application as a single **serverless function** for deployment on Vercel.
+
+## 🛠️ Tech stack
+
+| Technology | Purpose |
+|---|---|
+| **NestJS 11** | Core framework, dependency injection, modular architecture |
+| **Prisma 7** (with `@prisma/adapter-pg`) | ORM for PostgreSQL access |
+| **PostgreSQL** (hosted on **Supabase**) | Primary database |
+| **Passport + @nestjs/jwt** | User authentication with JWT access/refresh tokens |
+| **bcryptjs** | Password hashing |
+| **class-validator / class-transformer** | DTO validation and transformation |
+| **exceljs** | Excel report generation for statistics |
+| **Multer** | File uploads (product images) |
+| **@nestjs/serve-static** | Serving static files (images, and optionally the built frontend) |
+| **cookie-parser** | Refresh token cookie handling |
+
+## 🗃️ Data model
+
+The full schema is defined in `prisma/schema.prisma`. Core entities:
+
+`User` · `Store` · `Product` (with brands, category and substitute product) · `Warehouse` + `WarehouseStock` · `Order` + `OrderItem` · `WarehouseRequest` + `WarehouseRequestItem` · `Return` + `ReturnItem` · `Supplier` · `Brand` · `Categories` · `AppSettings` (a single global settings row)
+
+User roles (`Role`): `STORE` · `WAREHOUSE` · `ADMIN` · `DRIVER`
+
+> Schema changes are synced to the database with `prisma db push` (no classic migration history); changes that require data backfills go through idempotent SQL scripts under `prisma/manual-migrations`.
+
+## 🔐 Security & authorization
+
+- **JWT** short-lived access tokens plus a refresh token in an HTTP-only cookie
+- **Role guards** (`@Roles(...)`) on every sensitive endpoint, combined with `AuthGuard('jwt')`
+- **Admin scopes** (`adminScopes`) — an ADMIN only sees and manages the categories assigned to them
+- Passwords hashed with **bcryptjs**; other sensitive fields are encrypted with a key from `ENCRYPTION_KEY`
+- **CORS** configured with `credentials: true` to support cookies across separate frontend/backend domains
+
+## ⚙️ Environment variables
+
+Define a `.env` file at the project root (see the existing `.env` for the expected shape — no real values are committed to Git):
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string (Supabase) |
+| `JWT_SECRET` | Signing key for JWT tokens |
+| `ENCRYPTION_KEY` | Key used to encrypt sensitive fields |
+| `PORT` | Server port (defaults to `3001` in development) |
+
+## 🚀 Local setup
+
+**Prerequisites:** Node.js 18+, Yarn, access to a PostgreSQL database.
 
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+git clone https://github.com/igorlyakh/storage_backend.git
+cd storage_backend
+yarn install
+npx prisma db push
+yarn start:dev
 ```
 
-## Run tests
+The server runs on `http://localhost:3001` with the global prefix `/api` (i.e. `http://localhost:3001/api/...`).
 
-```bash
-# unit tests
-$ yarn run test
+## 📜 Available scripts
 
-# e2e tests
-$ yarn run test:e2e
+| Command | Description |
+|---|---|
+| `yarn start:dev` | Run in development mode with watch mode |
+| `yarn build` | Compile to `dist/` |
+| `yarn start:prod` | Run the compiled build |
+| `yarn test` | Run unit tests (Jest) |
+| `yarn test:e2e` | Run end-to-end tests |
+| `yarn lint` | Lint the code with ESLint |
 
-# test coverage
-$ yarn run test:cov
-```
+## ☁️ Deployment
 
-## Deployment
+Two deployment modes are supported:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+1. **Vercel (serverless)** — the default. `api/index.ts` wraps the Nest application as a single Express handler, and `vercel.json` routes every request to it. The separately deployed frontend points at this API URL.
+2. **A regular Node server (VPS, etc.)** — running `dist/main.js`, where `ServeStaticModule` is configured to also serve the `uploads` folder and, optionally, the built frontend files directly from the same server.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+The database is hosted on **Supabase** (managed PostgreSQL).
 
-```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
-```
+> ⚠️ **Technical note for Vercel deployment:** product images are currently written to the local disk (`fs.writeFile`) and served via `ServeStaticModule`. Vercel's serverless environment does not guarantee file persistence between invocations — for reliable product image storage on Vercel, move this to an external storage service (e.g. Vercel Blob or Supabase Storage).
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🔗 Related project — Frontend
 
-## Resources
+The user interface (React + Vite) lives in a separate repository: **[storage_frontend](https://github.com/igorlyakh/storage_frontend)**.
 
-Check out a few resources that may come in handy when working with NestJS:
+## 📄 License
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is **proprietary** and all rights are reserved. It may not be copied, distributed, or used without prior express written permission. See [LICENSE](LICENSE) for details.
